@@ -2,40 +2,30 @@
 // Created by windski on 2/13/18.
 //
 
-#ifndef FSM_H
-#define FSM_H
+#ifndef FSM_H_
+#define FSM_H_
 
 #include <array>
+#include <stack>
+#include <initializer_list>
 
 namespace utils {
 
-    class FSM;
-
-    class Status {
-    protected:
-        FSM *fsm = nullptr;
-
-    public:
-        virtual void status_enter() = 0;
-        virtual void status_exit() = 0;
-        virtual void status_update() = 0;
-
-        Status(FSM *_fsm);
-        virtual ~Status();
-    };
-
-    typedef enum { ERROR, SUCCESS, START } stat_code_t;
     class FSM {
-    private:
-        static std::array<std::array<int, 93>, 2> stat_tbl;
-        stat_code_t cur_stat = START;
-
     public:
-        bool register_stat(stat_code_t status, Status *pstatus);
-        bool change_stat(stat_code_t status);
+        FSM(std::initializer_list<std::string> accpet_words);
+        bool update_state(int ch);
+        bool is_error() const { return curr_stat == -1; }
+        bool is_accept() const { return curr_stat == accept_stat; }
+        void roll_back();
+
+    private:
+        int curr_stat;
+        int accept_stat;
+        std::stack<int> bkup_stat;
     };
 
 
 } // end of utils
 
-#endif //FAKESQL_FSM_H
+#endif //FSM_H_

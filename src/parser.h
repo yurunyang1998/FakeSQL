@@ -21,10 +21,11 @@ namespace utils {
         std::vector<id_t>ids_token;
         std::string pending_str;
         int curr_index;
-        int next_ch();
+        char next_ch();
 
     public:
-        Parser(std::string &str);
+        bool check_accept();
+        Parser(std::string str);
         std::vector<id_t> get_ids_stream() const
         {
             return ids_token;
