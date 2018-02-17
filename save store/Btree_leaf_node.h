@@ -6,16 +6,10 @@
 #ifndef FAKESQL_BTREE_NODE_H
 #define FAKESQL_BTREE_NODE_H
 
-#endif //FAKESQL_BTREE_NODE_H
-
-using namespace std;
-
+namespace utils {
 
 template <class key_type>
 class zhongjian_Node;      //在这里声明一下
-
-
-
 
 
 template  <class key_type>
@@ -34,7 +28,7 @@ public:
                 case 0:{
                     this->key0 = new key_type;
                     *key0 = key_g;
-                    this->data0 = new string;
+                    this->data0 = new std::string;
                     *data0 = data_g;
 
                     used_key_number++;
@@ -43,7 +37,7 @@ public:
                 case 1:{
                     this->key1 = new key_type;
                     *key1 = key_g;
-                    this->data1 = new string;
+                    this->data1 = new std::string;
                     *data1 = data_g;
 
                     used_key_number++;
@@ -53,7 +47,7 @@ public:
                 case 2:{
                     this->key2 = new key_type;
                     *key2 = key_g;
-                    this->data2 = new string;
+                    this->data2 = new std::string;
                     *data2 = data_g;
 
                     used_key_number++;
@@ -62,7 +56,7 @@ public:
                 case 3:{
                     this->key3 = new key_type;
                     *key3 = key_g;
-                    this->data3 = new string;
+                    this->data3 = new std::string;
                     *data3 = data_g;
 
                     used_key_number++;
@@ -71,7 +65,7 @@ public:
                 case 4:{
                     this->key4 = new key_type;
                     *key4 = key_g;
-                    this->data4 = new string;
+                    this->data4 = new std::string;
                     *data4 = data_g;
 
                     used_key_number++;
@@ -85,8 +79,8 @@ public:
     }
 
     void print(){
-        cout << *this->key1<<"  "<<this->key1<<endl;
-        cout << *this->data1<<"  "<<this->data1<<endl;
+        std::cout << *this->key1<<"  "<<this->key1<<std::endl;
+        std::cout << *this->data1<<"  "<<this->data1<<std::endl;
     }
 
 
@@ -94,7 +88,7 @@ public:
     void set_brother_node(Btree_leaf_Node<key_type> *bro_node) {   //设置兄弟节点
         try {
             this->brother=bro_node;
-            cout<<"Add brother_node succeed"<<endl;
+            std::cout<<"Add brother_node succeed"<<std::endl;
         }
         catch(...)
         {
@@ -105,7 +99,7 @@ public:
     {
         try{
             this->parent=parent_copy;
-            cout<<"set parent_node succeed"<<endl;
+            std::cout<<"set parent_node succeed"<<std::endl;
         }catch (...)
         {
 
@@ -125,20 +119,21 @@ private:
     Btree_leaf_Node<key_type>  *brother ; //兄弟节点
 
     key_type  *key0;
-    string *data0;
+    std::string *data0;
 
     key_type *key1;
-    string *data1;
+    std::string *data1;
 
     key_type *key2;
-    string *data2;
+    std::string *data2;
 
     key_type *key3;
-    string *data3;
+    std::string *data3;
 
     key_type *key4;
-    string *data4;
+    std::string *data4;
 
 };
 
-
+}  // end of utils
+#endif //FAKESQL_BTREE_NODE_H
