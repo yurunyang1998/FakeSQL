@@ -6,8 +6,7 @@
 #ifndef FAKESQL_BTREE_ZHONGJIAN_NODE_H
 #define FAKESQL_BTREE_ZHONGJIAN_NODE_H
 
-#endif //FAKESQL_BTREE_ZHONGJIAN_NODE_H
-
+namespace utils {
 
 template <class key_type >
 class zhongjian_Node{
@@ -48,3 +47,7 @@ private:
     Btree_leaf_Node<key_type>   *index3_;          //3 <= key
 
 };
+
+} // end of utils
+
+#endif //FAKESQL_BTREE_ZHONGJIAN_NODE_H
