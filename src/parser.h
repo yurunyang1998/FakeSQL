@@ -3,10 +3,15 @@
 
 #include <string>
 #include <vector>
+#include "fsm.h"
+#include <queue>
 
 namespace utils {
 
-    enum token_t { IDENTIFIER, SELETE, FROM };
+    const size_t MAXBUF = 4096;
+
+    enum token_t { IDENTIFIER, SELECT, FROM };
+
 
     struct id_t {
         bool is_sqlkw;
@@ -20,20 +25,42 @@ namespace utils {
     private:
         std::vector<id_t>ids_token;
         std::string pending_str;
+        std::string buff_str;
         int curr_index;
+        utils::FSM mashine;
+        std::queue<std::string> cmd_que;
+
         char next_ch();
+        int pre_parse();
 
     public:
         bool check_accept();
         Parser(std::string str);
+        Parser();
         std::vector<id_t> get_ids_stream() const
         {
             return ids_token;
         }
+
+        friend Parser& operator<<(Parser &op, std::string Rstr)
+        {
+            op.buff_str = Rstr;
+            op.pre_parse();
+            return op;
+        }
+        friend Parser& operator<<(Parser &op, char* Rstr)
+        {
+            std::string tmp(Rstr);
+            op.buff_str = tmp;
+            op.pre_parse();
+            return op;
+        }
+
         ~Parser();
     };
 
 
+    extern void shell();
 
 } // end of utils
 
