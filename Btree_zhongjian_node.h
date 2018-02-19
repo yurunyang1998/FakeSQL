@@ -1,10 +1,11 @@
 //
 // Created by yurunyang on 18-2-16.
 //
-#include "Btree_leaf_node.h"
-#include "assert.h"
 #ifndef FAKESQL_BTREE_ZHONGJIAN_NODE_H
 #define FAKESQL_BTREE_ZHONGJIAN_NODE_H
+
+#include "Btree_leaf_node.h"
+#include "assert.h"
 
 namespace utils {
 
@@ -14,25 +15,20 @@ public:
     zhongjian_Node()
     {
         this->used_nodes=0;
-
-    };
+    }
 
     void set_this_to_root_node(){
         this->whether_root = true;
     }
 
-    void set_parent_node(zhongjian_Node<key_type> *parent_copy) {
-
-        assert(this->parent = parent_copy)
-        {
-            std::cout << "set parent_node failed" << std::endl;
-        }
-            std::cout << "set parent_node succeed" << std::endl;
-
+    void set_parent_node(zhongjian_Node<key_type> *parent_copy)
+    {
+        assert(this->parent = parent_copy);
+        std::cout << "set parent_node succeed" << std::endl;
     }
 
     int get_used_nodes_number(){
-        return  this->used_nodes;
+        return this->used_nodes;
     }
 
     int get_empty_nodes_number()
@@ -43,27 +39,20 @@ public:
     int spile_node();   //分裂自己
 
 
-    void set_child_node(zhongjian_Node<key_type> * child,int i,key_type key_g){ // i 表示使用过的节点
-
+    void set_child_node(zhongjian_Node<key_type> * child,int i,key_type key_g)
+    { // i 表示使用过的节点
+        /*
         switch (i)
         {
             case 0 :{
                 this->key0 = key_g;
-                this
             }
         }
+        */
     }
 
 
-
-
-
-
-
-
-
 private:
-
     zhongjian_Node<key_type>  *parent;   //父节点
     int used_nodes; //已经使用过的节点
 
@@ -83,16 +72,6 @@ private:
     zhongjian_Node<key_type>  *zhongjian_index_2;
     zhongjian_Node<key_type>  *zhongjian_index_3;
     zhongjian_Node<key_type>  *zhongjian_index_4;
-
-
-
-
-
-
-
-
-
-
 
     //当作为倒数第二个层节点时使用下面的属性
     key_type key0;
