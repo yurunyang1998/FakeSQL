@@ -16,8 +16,8 @@ public:
 
     void set_parent_node(zhongjian_Node<key_type> *parent_copy)
     {
-        this->parent=parent_copy;
-        cout<<"set parent_node succeed"<<endl;
+        this->parent = parent_copy;
+        std::cout << "set parent_node succeed" << std::endl;
     }
 
     int spile_node();   //分裂自己

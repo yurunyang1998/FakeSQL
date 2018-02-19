@@ -6,7 +6,7 @@ int main() {
 
     std::string it  = "hahah";
     int i = 4;
-    std::cout<<&i<<"  "<<&it<<std::endl;
+    std::cout << &i << "  " << &it << std::endl;
     leaf.insert_data(i,it);
     leaf.insert_data(5,"sdfsdf");
     leaf.print();

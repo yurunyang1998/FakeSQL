@@ -18,7 +18,7 @@ class  Btree_leaf_Node{
 public:
     Btree_leaf_Node() { this->used_key_number=0; }
 
-    void insert_data(key_type key_g,string data_g)// _g 结尾表示外面来的数据指针，防止和内部的key，data命名混淆
+    void insert_data(key_type key_g, std::string data_g)// _g 结尾表示外面来的数据指针，防止和内部的key，data命名混淆
     {
         int now_used_number;
         now_used_number = this->get_key_numbers();
