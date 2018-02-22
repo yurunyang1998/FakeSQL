@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstring>
 #include <strings.h>
+#include <iostream>
 
 static std::initializer_list<std::string> accept_words = {"SELECT", "FROM"};
 
@@ -48,6 +49,8 @@ bool utils::Parser::check_accept()
 }
 
 
+// 解析的预处理.
+// 将回车替换成空格, 然后再将多余的空格减少成一个
 int utils::Parser::pre_parse()
 {
     if(!cmd_que.empty()) {
@@ -69,6 +72,7 @@ int utils::Parser::pre_parse()
     int count = 0;
     bzero(buff, sizeof(buff));
 
+    // 去掉多余的空格. 用buff作为缓冲区,将去掉多余的空格的字符串放到这里.
     iter = buff_str.begin();
     while(iter != buff_str.end()) {
         buff[count++] = *iter++;
@@ -78,9 +82,28 @@ int utils::Parser::pre_parse()
             while(* ++iter == ' ');
         }
     }
+    std::string tmp(buff);
+
+    unsigned long head = 0;
+    for(unsigned long  i = 0; i < tmp.length(); i++) {
+        if(tmp[i] == ';') {
+            cmd_que.push(tmp.substr(head, i - head));
+            head = i + 1;
+        }
+    }
+
+
 
     // debug 用....
-    printf("%s", buff);
+//    printf("%s\n", buff);
+
+    // print the queue's data
+    while(!cmd_que.empty()) {
+        std::cout << cmd_que.front() << std::endl;
+        cmd_que.pop();
+    }
+    // force stop
+    exit(1);
 }
 
 
@@ -90,6 +113,7 @@ utils::Parser::~Parser()
 }
 
 
+// 定义一个专门用于shell 输入的函数. 目前先作为测试用
 static int fgets2buf(char *buff, FILE *fp, size_t max)
 {
     char ch;
