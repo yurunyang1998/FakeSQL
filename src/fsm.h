@@ -11,9 +11,15 @@
 
 namespace utils {
 
+    typedef struct {
+        bool type;
+        char *word;
+        size_t x, y;
+    } word_status_t;
+
     class FSM {
     public:
-        FSM(std::initializer_list<std::string> accpet_words);
+        FSM(std::initializer_list<std::string> &accpet_words);
         bool update_state(int ch);
         bool is_error() const { return curr_stat == -1; }
         bool is_accept() const { return curr_stat == accept_stat; }

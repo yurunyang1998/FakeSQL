@@ -10,7 +10,7 @@
 
 std::array<std::array<int, 93>, 93> utils::FSM::trans_tbl = {{-1, }, };
 
-utils::FSM::FSM(std::initializer_list<std::string> accept_words)
+utils::FSM::FSM(std::initializer_list<std::string> &accept_words)
         : accept_stat(0), curr_stat(0)
 {
     std::array<std::array<int, 93>, 93>::iterator iter1;
