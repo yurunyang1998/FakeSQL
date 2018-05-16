@@ -8,8 +8,6 @@ ADD_FLEX_BISON_DEPENDENCY(scanner parser)
 
 ADD_EXECUTABLE(FakeSQL
         main.cpp
-        parser.cpp parser.h
-        fsm.cpp fsm.h
         ${BISON_parser_OUTPUTS}
         ${FLEX_scanner_OUTPUTS})
 
