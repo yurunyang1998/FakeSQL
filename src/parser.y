@@ -119,6 +119,7 @@ void emit(char *s, ...);
 %token HAVING
 %token HOST
 %token HOUR
+%token HIGH_PRIORITY
 
 %token IDENTITY
 %token IGNORE
@@ -252,7 +253,9 @@ void emit(char *s, ...);
 
 
 %type <intval> select_opts select_expr_list
-%type <intval> groupby_list
+%type <intval> groupby_list opt_with_rollup opt_asc_desc
+%type <intval> val_list opt_val_list case_list
+%type <intval> table_reference
 
 %start stmt_list
 
@@ -277,3 +280,49 @@ opt_where:
 opt_groupby:
     | GROUP BY group_list opt_with_rollup { emit("GROUPBYLIST %d %d", $3, $4); }
     ;
+
+groupby_list: expr opt_asc_desc { emit("GROUPBY %d", $2); $$ = 1}
+    | groupby_list ',' expr opt_asc_desc { emit("GROUPBY %d", $4); $$ = $1 + 1}
+    ;
+
+opt_asc_desc:       { $$ = 0; }
+    | ASC           { $$ = 0; }
+    | DESC          { $$ = 1; }
+    ;
+
+opt_with_rollup:    { $$ = 0; }
+    | WITH ROLLUP   { $$ = 1; }
+    ;
+
+opt_having:
+    | HAVING expr   { emit("HAVING"); }
+    ;
+
+opt_orderby:
+    | ORDER BY groupby_list { emit("ORDER BY %d", $3); }
+    ;
+
+opt_limit:
+    | LIMIT expr    { emit("LIMIT 1"); }
+    | LIMIT expr ',' expr { emit("LIMIT 2"); }
+    ;
+
+opt_into_list:
+    | INTO column_list  { emit("INTO %d", $2); }
+    ;
+
+column_list: NAME       { emit("COLUMN %s", $1); free($1); $$ = 1; }
+    | column_list ',' NAME  { emit("COLUMN %s", $3); free($3); $$ = $1 + 1;}
+    ;
+
+select_opts:                            { $$ = 0; }
+    | select_opts ALL                   { if($$ & 01) exit(-1); $$ = $1 | 01; }
+    | select_opts DISTINCT              { if($$ & 02) exit(-2); $$ = $1 | 02; }
+    | select_opts DISTINCTROW           { if($$ & 04) exit(-3); $$ = $1 | 04; }
+    | select_opts HIGH_PRIORITY         { if($$ & 010) exit(-4); $$ = $1 | 010; }
+    | select_opts STRAIGHT_JOIN         { if($$ & 020) exit(-5); $$ = $1 | 020; }
+    | select_opts SQL_SMALL_RESULT      { if($$ & 040) exit(-6); $$ = $1 | 040; }
+    | select_opts SQL_BIG_RESULT        { if($$ & 0100) exit(-7); $$ = $1 | 0100; }
+    | select_opts SQL_CALC_FOUND_ROWS   { if($$ & 0200) exit(-8); $$ = $1 | 0200; }
+    ;
+
