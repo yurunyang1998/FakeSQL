@@ -134,6 +134,7 @@ LESS                { return LESS; }
 LOOP                { return LOOP; }
 LIKE                { return LIKE; }
 LIMIT               { return LIMIT; }
+LOW_PRIORITY        { return LOW_PRIORITY; }
 
 MINUTE              { return MINUTE; }
 MOD                 { return MOD; }
@@ -171,6 +172,8 @@ OUTPUT              { return OUTPUT; }
 PRIMARY             { return PRIMARY; }
 PUBLIC              { return PUBLIC; }
 
+QUICK               { return QUICK; }
+
 REFERENCES          { return REFERENCES; }
 RELATIVE            { return RELATIVE; }
 RESTRICT            { return RESTRICT; }
@@ -195,6 +198,8 @@ SSL                 { return SSL; }
 STATE               { return STATE; }
 STRUCTURE           { return STRUCTURE; }
 STRAIGHT_JOIN       { return STRAIGHT_JOIN; }
+SCHEMA              { return SCHEMA; }
+SCHEMAS             { return SCHEMAS; }
 
 TABLE               { return TABLE; }
 TEXT                { return TEXT; }

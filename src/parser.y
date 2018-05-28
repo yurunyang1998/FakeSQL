@@ -159,6 +159,7 @@ int yylex();
 %token LOOP
 %token LIKE
 %token LIMIT
+%token LOW_PRIORITY
 
 %token MINUTE
 %token MOD
@@ -196,6 +197,8 @@ int yylex();
 %token PRIMARY
 %token PUBLIC
 
+%token QUICK
+
 %token REFERENCES
 %token RELATIVE
 %token RESTRICT
@@ -220,6 +223,8 @@ int yylex();
 %token STATE
 %token STRUCTURE
 %token STRAIGHT_JOIN
+%token SCHEMA
+%token SCHEMAS
 
 %token TABLE
 %token TEXT
@@ -271,7 +276,8 @@ int yylex();
 /** %type <intval> val_list */
 %type <intval> table_references opt_inner_cross opt_left_or_right_outer
 %type <intval> column_list left_or_right opt_outer
-%type <intval> index_list opt_for_join
+%type <intval> index_list opt_for_join delete_opts delete_list
+%type <intval> opt_if_not_exists
 
 %start stmt_list
 
@@ -284,6 +290,22 @@ stmt_list: stmt ';'
 stmt: select_stmt { ("STMT"); }
     ;
 
+/* create database */
+
+stmt: create_database_stmt      { emit("STMT"); }
+    ;
+
+create_database_stmt: CREATE DATABASE opt_if_not_exists NAME    { emit("CREATEDATABASE %d %s", $3, $4); free($4); }
+    | CREATE SCHEMA opt_if_not_exists NAME                      { emit("CREATEDATABASE %d %s", $3, $4); free($4); }
+    ;
+
+/* force stop when error arise */
+opt_if_not_exists:  { $$ = 0; }
+    | IF EXISTS     { if(!$2) exit(-1); $$ = $2; }
+    ;
+
+
+/* SELECT sentence */
 select_stmt: SELECT select_opts select_expr_list { emit("SELECTNODATA %d %d", $2, $3); };
     | SELECT select_opts select_expr_list FROM table_references opt_where opt_groupby opt_having
         opt_limit opt_into_list { emit("SELECT %d %d %d", $2, $3, $5); };
@@ -418,6 +440,34 @@ index_list: NAME            { emit("INDEX %s", $1); free($1); $$ = 1; }
     ;
 
 table_subquery: '(' select_stmt ')'     { emit("SUBQUERY"); }
+    ;
+
+
+/* DELETE sentence */
+
+stmt: delete_stmt       { emit("STMT"); }
+    ;
+
+delete_stmt: DELETE delete_opts FROM NAME opt_where opt_orderby opt_limit { emit("DELETEONE %d %s", $2, $4); free($4); }
+    ;
+
+delete_opts: delete_opts LOW_PRIORITY   { $$ = $1 + 0x01; }
+    | delete_opts QUICK                 { $$ = $1 + 0x02; }
+    | delete_opts IGNORE                { $$ = $1 + 0x04; }
+    |                                   { $$ = 0; }
+    ;
+
+delete_stmt: DELETE delete_opts delete_list FROM table_references opt_where { emit("DELETEMULTI %d %d %d", $2, $3, $5); }
+
+delete_list: NAME opt_dot_star          { emit("TABLE %s", $1); free($1); $$ = 1; }
+    | delete_list ',' NAME opt_dot_star { emit("TABLE %s", $3); free($3);  $$ = $1 + 1; }
+    ;
+
+opt_dot_star:
+    | '.' '*'
+    ;
+
+delete_stmt: DELETE delete_opts FROM delete_list USING table_references opt_where   { emit("DELETEMULTI %d %d %d", $2, $4, $6); }
     ;
 
 
