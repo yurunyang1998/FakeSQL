@@ -1,8 +1,10 @@
 %option noyywrap yylineno case-insensitive
+/* %option yyclass="base_utils::cmd_scanner" */
 
 %{
 #include <stdarg.h>
 #include <string.h>
+#include "parser.h"
 
 int old_state;
 
@@ -58,6 +60,7 @@ DATABASE            { return DATABASE; }
 DATE                { return DATE; }
 DAY                 { return DAY; }
 DEC                 { return DEC; }
+DESC                { return DESC; }
 DECIMAL             { return DECIMAL; }
 DEFAULT             { return DEFAULT; }
 DECLARE             { return DECLARE; }
@@ -66,6 +69,7 @@ DELETE              { return DELETE; }
 DEPTH               { return DEPTH; }
 DESCRIBE            { return DESCRIBE; }
 DISTINCT            { return DISTINCT; }
+DISTINCTROW         { return DISTINCTROW; }
 DOUBLE              { return DOUBLE; }
 DROP                { return DROP; }
 DYNAMIC             { return DYNAMIC; }
@@ -84,6 +88,7 @@ FETCH               { return FETCH; }
 FIRST               { return FIRST; }
 FLOAT               { return FLOAT; }
 FOR                 { return FOR; }
+FORCE               { return FORCE; }
 FOREIGN             { return FOREIGN; }
 FROM                { return FROM; }
 FULL                { return FULL; }
@@ -110,7 +115,7 @@ INOUT               { return INOUT; }
 INPUT               { return INPUT; }
 INSERT              { return INSERT; }
 INT4|INTEGER        { return INTEGER; }
-INT1|TINYINT        { return TINYINY; }
+INT1|TINYINT        { return TINYINT; }
 INTERVAL            { return INTERVAL; }
 INTO                { return INTO; }
 IS                  { return IS; }
@@ -139,6 +144,7 @@ MONTH               { return MONTH; }
 
 NAMES               { return NAMES; }
 NATIONAL            { return NATIONAL; }
+NATURAL             { return NATURAL; }
 NEW                 { return NEW; }
 NEXT                { return NEXT; }
 NO                  { return NO; }
@@ -170,6 +176,7 @@ RELATIVE            { return RELATIVE; }
 RESTRICT            { return RESTRICT; }
 RESULT              { return RESULT; }
 RIGHT               { return RIGHT; }
+ROLLUP              { return ROLLUP; }
 ROW                 { return ROW; }
 
 SELECT              { return SELECT; }
@@ -187,6 +194,7 @@ SQL_SMALL_RESULT    { return SQL_SMALL_RESULT; }
 SSL                 { return SSL; }
 STATE               { return STATE; }
 STRUCTURE           { return STRUCTURE; }
+STRAIGHT_JOIN       { return STRAIGHT_JOIN; }
 
 TABLE               { return TABLE; }
 TEXT                { return TEXT; }
@@ -202,6 +210,7 @@ UNDO                { return UNDO; }
 UNION               { return UNION; }
 UNIQUE              { return UNIQUE; }
 UNSIGNED            { return UNSIGNED; }
+USE                 { return USE; }
 USER                { return USER; }
 USING               { return USING; }
 UPDATE              { return UPDATE; }
@@ -274,12 +283,12 @@ COUNT               { int c = input(); unput(c); if(c == '(') return FCOUNT; yyl
 @[0-9a-z_.$]+ |
 @\"[^"\n]+\" |
 @`[^`\n]+` |
-@'[^'\n]+'          { yylval.strval = strdup(yytext + 1); return USERVALR; }
+@'[^'\n]+'          { yylval.strval = strdup(yytext + 1); return USERVAR; }
 
 #.* ;
 "--"[ \t].* ;
 "/*"                { old_state = YY_START; BEGIN COMMENT; }
-<COMMENT>"*/"       { BEGIN oldstate; }
+<COMMENT>"*/"       { BEGIN old_state; }
 <COMMENT>.|\n ;
 
 %%
