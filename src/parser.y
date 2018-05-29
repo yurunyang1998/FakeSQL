@@ -1,6 +1,7 @@
 %require "3.0.4"
 %{
 
+#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
@@ -91,6 +92,7 @@ int yylex();
 %token DEPTH
 %token DESCRIBE
 %token DESC
+%token DELAYED
 %token DISTINCT
 %token DISTINCTROW
 %token DOUBLE
@@ -277,7 +279,11 @@ int yylex();
 %type <intval> table_references opt_inner_cross opt_left_or_right_outer
 %type <intval> column_list left_or_right opt_outer
 %type <intval> index_list opt_for_join delete_opts delete_list
-%type <intval> opt_if_not_exists
+%type <intval> opt_if_not_exists insert_opts insert_vals_list insert_asgn_list
+%type <intval> insert_vals
+
+
+%left <subtok> COMPARISON
 
 %start stmt_list
 
@@ -287,7 +293,7 @@ stmt_list: stmt ';'
     | stmt_list stmt ';'
     ;
 
-stmt: select_stmt { ("STMT"); }
+stmt: select_stmt { emit("STMT"); }
     ;
 
 /* create database */
@@ -468,6 +474,55 @@ opt_dot_star:
     ;
 
 delete_stmt: DELETE delete_opts FROM delete_list USING table_references opt_where   { emit("DELETEMULTI %d %d %d", $2, $4, $6); }
+    ;
+
+
+/* INSERT sentence */
+stmt: insert_stmt       { emit("STMT"); }
+    ;
+
+insert_stmt: INSERT insert_opts opt_into NAME opt_col_names VALUES insert_vals_list
+           opt_ondupupdate  { emit("INSERTVALS %d %d %s", $2, $7, $4); free($4); }
+    ;
+
+opt_ondupupdate:
+    | ONDUPLICATE KEY UPDATE insert_asgn_list   { emit("DUPUPDATE %d", $4); }
+    ;
+
+insert_opts:        { $$ = 0; }
+    | insert_opts LOW_PRIORITY  { $$ = $1 | 0x01; }
+    | insert_opts DELAYED       { $$ = $1 | 0x02; }
+    | insert_opts HIGH_PRIORITY { $$ = $1 | 0x04; }
+    | insert_opts IGNORE        { $$ = $1 | 0x05; }
+    ;
+
+opt_into: INTO
+    |
+    ;
+
+opt_col_names:
+    | '(' column_list ')'   { emit("INSERTCOLS %d", $2); }
+    ;
+
+insert_vals_list: '(' insert_vals ')'   { emit("VALUES %d", $2); $$ = 1; }
+    | insert_vals_list ',' '(' insert_vals ')' { emit("VALUES %d", $4); $$ = $1 + 1; }
+
+insert_vals: expr   { $$ = 1; }
+    | DEFAULT       { emit("DEFAULT"); $$ = 1; }
+    | insert_vals ',' expr      { $$ = $1 + 1; }
+    | insert_vals ',' DEFAULT   { emit("DEFAULT"); $$ = $1 + 1; }
+    ;
+
+insert_stmt: INSERT insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate
+           { emit("INSERTASGN %d %d %s", $2, $6, $4); free($4); }
+    ;
+
+insert_stmt: INSERT insert_opts opt_into NAME opt_col_names select_stmt opt_ondupupdate
+           { emit("INSERTSELECT %d %s", $2, $4); free($4); }
+    ;
+
+insert_asgn_list: NAME COMPARISON expr  { if($2 != 4) { printf("bad insert assignment to %s\n", $1); exit(-2); } emit("ASSIGN %s", $1); free($1); $$ = 1; }
+    | NAME COMPARISON DEFAULT           { if($2 != 4) {  printf("bad insert assignment to %s\n", $1); exit(-2); } emit("ASSIGN %s", $1); free($1); $$ = 1; }
     ;
 
 

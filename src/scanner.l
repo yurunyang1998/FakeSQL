@@ -68,6 +68,7 @@ DEFERRABLE          { return DEFERRABLE; }
 DELETE              { return DELETE; }
 DEPTH               { return DEPTH; }
 DESCRIBE            { return DESCRIBE; }
+DELAYED             { return DELAYED; }
 DISTINCT            { return DISTINCT; }
 DISTINCTROW         { return DISTINCTROW; }
 DOUBLE              { return DOUBLE; }
