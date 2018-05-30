@@ -182,6 +182,7 @@ RESULT              { return RESULT; }
 RIGHT               { return RIGHT; }
 ROLLUP              { return ROLLUP; }
 ROW                 { return ROW; }
+REPLACE             { return REPLACE; }
 
 SELECT              { return SELECT; }
 SESSION             { return SESSION; }

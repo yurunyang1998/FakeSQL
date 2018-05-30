@@ -39,6 +39,7 @@ int yylex();
 %left '+' '-'
 %left '*' '/' MOD '%'
 %left '^'
+%left <subtok> SHIFT
 %nonassoc UMINUS
 
 %token ADD
@@ -208,6 +209,7 @@ int yylex();
 %token RIGHT
 %token ROW
 %token ROLLUP
+%token REPLACE
 
 %token SELECT
 %token SESSION
@@ -280,7 +282,7 @@ int yylex();
 %type <intval> column_list left_or_right opt_outer
 %type <intval> index_list opt_for_join delete_opts delete_list
 %type <intval> opt_if_not_exists insert_opts insert_vals_list insert_asgn_list
-%type <intval> insert_vals
+%type <intval> insert_vals update_opts update_asgn_list
 
 
 %left <subtok> COMPARISON
@@ -521,8 +523,58 @@ insert_stmt: INSERT insert_opts opt_into NAME opt_col_names select_stmt opt_ondu
            { emit("INSERTSELECT %d %s", $2, $4); free($4); }
     ;
 
-insert_asgn_list: NAME COMPARISON expr  { if($2 != 4) { printf("bad insert assignment to %s\n", $1); exit(-2); } emit("ASSIGN %s", $1); free($1); $$ = 1; }
-    | NAME COMPARISON DEFAULT           { if($2 != 4) {  printf("bad insert assignment to %s\n", $1); exit(-2); } emit("ASSIGN %s", $1); free($1); $$ = 1; }
+insert_asgn_list: NAME COMPARISON expr              { if($2 != 4) { printf("bad insert assignment to %s\n", $1); exit(-2); }
+                emit("ASSIGN %s", $1); free($1); $$ = 1; }
+    | NAME COMPARISON DEFAULT                       { if($2 != 4) { printf("bad insert assignment to %s\n", $1); exit(-2); }
+                emit("DEFAULT"); emit("ASSIGN %s", $1); free($1); $$ = 1; }
+    | insert_asgn_list ',' NAME COMPARISON expr     { if($4 != 4) { printf("bad insert assignment to %s\n", $1); exit(-2); }
+                emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
+    | insert_asgn_list ',' NAME COMPARISON DEFAULT  { if($4 != 4) { printf("bad insert assignment to %s\n", $1); exit(-2); }
+                emit("DEFAULT"); emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
+    ;
+
+
+/* REPLACE sentence */
+stmt: replace_stmt  { emit("STMT"); }
+    ;
+
+replace_stmt: REPLACE insert_opts opt_into NAME
+            opt_col_names VALUES insert_vals_list
+            opt_ondupupdate     { emit("REPLACEVALS %d %d %s", $2, $7, $4); free($4); }
+    ;
+
+replace_stmt: REPLACE insert_opts opt_into NAME
+            SET insert_asgn_list opt_ondupupdate
+            { emit("REPLACEASGN %d %d %s", $2, $6, $4); free($4); }
+    ;
+
+replace_stmt: REPLACE insert_opts opt_into NAME
+            opt_col_names select_stmt opt_ondupupdate
+            { emit("REPLACESELECT %d %s", $2, $4); free($4); }
+    ;
+
+
+/* UPDATE sentence */
+stmt: update_stmt   { emit("STMT"); }
+    ;
+
+update_stmt: UPDATE update_opts table_references SET update_asgn_list
+           opt_where opt_orderby opt_limit  { emit("UPDATE %d %d %d", $2, $3, $5); }
+    ;
+
+update_opts:    { $$ = 0; }
+    | insert_opts LOW_PRIORITY  { $$ = $1 | 0x01; }
+    | insert_opts IGNORE        { $$ = $1 | 0x02; }
+    ;
+
+update_asgn_list: NAME COMPARISON expr                      { if($2 != 4) { printf("bad insert assignment to %s", $1); exit(-3); }
+                emit("ASSIGN %s", $1); free($1); $$ = 1; }
+    | NAME '.' NAME COMPARISON expr                         { if($4 != 4) { printf("bad insert assignment to %s", $1); exit(-3); }
+                emit("ASSIGN %s.%s", $1, $3); free($1); free($3); $$ = 1; }
+    | update_asgn_list ',' NAME COMPARISON expr             { if($4 != 4) { printf("bad insert assignment to %s", $3); exit(-3); }
+                emit("ASSIGN %s", $3); free($3); $$ = 1; }
+    | update_asgn_list ',' NAME '.' NAME COMPARISON expr    { if($6 != 4) { printf("bad insert assignment to %s.%s", $3, $5); exit(-3); }
+                emit("ASSIGN %s.%s", $3, $5); free($3); free($5); $$ = 1;}
     ;
 
 
