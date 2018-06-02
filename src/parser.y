@@ -578,6 +578,88 @@ update_asgn_list: NAME COMPARISON expr                      { if($2 != 4) { prin
     ;
 
 
+/* Create table sentence */
+
+stmt: create_table_stmt { emit("STMT"); }
+    ;
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '(' create_col_list ')'
+                 create_select_statement    { emit("CREATE %d %d %d %s", $2, $4, $7, $5); free($5); }
+    ;
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '.' NAME '(' create_col_list ')'
+                 { emit("CREATE %d %d %d %s.%s", $2, $4, $9, $5, $7); free($5); free($7); }
+    ;
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '(' create_col_list ')'
+                 create_select_statement    { emit("CREATESELECT %d %d %d 0 %s", $2, $4, $7, $5); free($5); }
+    ;
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '.' NAME '(' create_col_list ')'
+                 create_select_statement    { emit("CREATESELECT %d %d 0 %s.%s", $2, $4, $5, $7); free($5); free($7); }
+    ;
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME create_select_statement
+                 { emit("CREATESELECT %d %d 0 %s", $2, $4, $5); free($5); }
+    ;
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '.' NAME create_select_statement
+                 { emit("CREATESELECT %d %d 0 %s.%s", $2, $4, $5, $7); free($5); free($7); }
+    ;
+
+create_col_list: create_definition  { $$ = 1; }
+    | create_col_list ',' create_definition { $$ = $1 + 1;}
+    ;
+
+create_definition: { emit("STARTCOL"); } NAME data_type column_atts { emit("COLUMNDEF %d %s", $3, $2); free($2); }
+    | PRIMARY KEY '(' column_list ')'           { emit("PRIKEY %d", $4); }
+    | KEY '(' column_list ')'                   { emit("KEY %d", $3); }
+    | INDEX '(' column_list ')'                 { emit("KEY %d", $3); }
+    | FULLTEXT INDEX '(' column_list ')'        { emit("TEXTINDEX %d", $4); }
+    | FULLTEXT KEY '(' column_list ')'          { emit("TEXTINDEX %d", $4); }
+    ;
+
+column_atts:    { $$ = 0; }
+    | column_atts NOT NULLX                     { emit("ATTR NOTNULL"); $$ = $1 + 1; }
+    | column_atts NULLX
+    | column_atts DEFAULT STRING                { emit("ATTR DEFAULT STRING %s", $3); free($3); $$ = $1 + 1; }
+    | column_atts DEFAULT INTNUM                { emit("ATTR DEFAULT NUMBER %d", $3); free($3); $$ = $1 + 1; }
+    | column_atts DEFAULT APPROXNUM             { emit("ATTR DEFAULT FLOAT %f", $3); $$ = $1 + 1; }
+    | column_atts DEFAULT BOOL                  { emit("ATTR DEFAULT BOOL %d", $3); $$ = $1 + 1; }
+    | column_atts AUTO_INCREMENT                { emit("ATTR AUTOINC"); $$ = $1 + 1; }
+    | column_atts UNIQUE '(' column_list ')'    { emit("ATTR UNIQUEKEY %d", $4); $$ = $1 + 1; }
+    | column_atts UNIQUE KEY                    { emit("ATTR UNIQUEKEY"); $$ = $1 + 1; }
+    | column_atts PRIMARY KEY                   { emit("ATTR PRIKEY"); $$ = $1 + 1; }
+    | column_atts KEY                           { emit("ATTR PRIKEY"); $$ = $1 + 1; }
+    | column_atts COMMENT STRING                { emit("ATTR COMMENT %s", $3); free($3); $$ = $1 + 1; }
+    ;
+
+opt_length:             { $$ = 0; }
+    | '(' INTNUM ')'    { $$ = $2; }
+    | '(' INTNUM ',' INTNUM ')' { $$ = $2 + 1000 * $4; }
+    ;
+
+opt_binary:     { $$ = 0; }
+    | BINARY    { $$ = 4000; }
+    ;
+
+opt_uz:                 { $$ = 0; }
+    | opt_uz UNISGNED   { $$ = $1 | 1000; }
+    | opt_uz ZEROFILL   { $$ = $1 | 2000; }
+    ;
+
+opt_csc:
+    | opt_csc CHAR SET STRING { emit("COLCHARSET %s", $4); free($4); }
+    | opt_csc COLLATE STRING  { emit("COLCOLLATE %s", $3); free($3); }
+    ;
+
+data_type: BIT opt_length                   { $$ = 10000 + $2; }
+    | TINYINT opt_length opt_uz             { $$ = 10000 + $2; }
+    ;
+
+
+
+
 /** demo expressions (Just for compiler) **/
 expr:   NAME            { emit("NAME %s", $1); free($1); }
     | USERVAR           { emit("USERVAR %s", $1); free($1); }
