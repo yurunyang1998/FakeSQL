@@ -49,6 +49,7 @@ int yylex();
 %token AND
 %token AS
 %token ASC
+%token AUTO_INCREMENT
 
 %token BEFORE
 %token BETWEEN
@@ -67,6 +68,7 @@ int yylex();
 %token COLLATE
 %token COLUMN
 %token COMMIT
+%token COMMENT
 %token CONDITION
 %token CONSTRAINT
 %token CONTINUE
@@ -96,6 +98,7 @@ int yylex();
 %token DELAYED
 %token DISTINCT
 %token DISTINCTROW
+%token DATETIME
 %token DOUBLE
 %token DROP
 %token DYNAMIC
@@ -119,6 +122,7 @@ int yylex();
 %token FOREIGN
 %token FROM
 %token FULL
+%token FULLTEXT
 %token FUNCTION
 
 %token GLOBAL
@@ -141,6 +145,7 @@ int yylex();
 %token INOUT
 %token INPUT
 %token INSERT
+%token INT
 %token INTEGER
 %token INITIALIZE
 %token TINYINT
@@ -655,6 +660,25 @@ opt_csc:
 
 data_type: BIT opt_length                   { $$ = 10000 + $2; }
     | TINYINT opt_length opt_uz             { $$ = 10000 + $2; }
+    | SMALLINT opt_length opt_uz            { $$ = 20000 + $2 + $3; }
+    | MEDIUMINT opt_length opt_uz           { $$ = 30000 + $2 + $3; }
+    | INT opt_length opt_uz                 { $$ = 40000 + $2 + $3; }
+    | INTEGER opt_length opt_uz             { $$ = 50000 + $2 + $3; }
+    | BIGINT opt_length opt_uz              { $$ = 60000 + $2 + $3; }
+    | REAL opt_length opt_uz                { $$ = 70000 + $2 + $3; }
+    | DOUBLE opt_length opt_uz              { $$ = 80000 + $2 + $3; }
+    | FLOAT opt_length opt_uz               { $$ = 90000 + $2 + $3; }
+    | DECIMAL opt_length opt_uz             { $$ = 110000 + $2 + $3; }
+    | DATE opt_length opt_uz                { $$ = 100001; }
+    | TIMESTAMP         { $$ = 100002; }
+    | TIME              { $$ = 100003; }
+    | DATETIME          { $$ = 100004; }
+    | YEAR              { $$ = 100005; }
+    | CHAR opt_length opt_csc               { $$ = 120000 + $2; }
+    ;
+
+enum_list: STRING           { emit("ENUMVAL %s", $1); free($1); $$ = 1; }
+    | enum_list ',' STRING  { emit("ENUMVAL %s", $3); free($3); $$ = $1 + 1; }
     ;
 
 

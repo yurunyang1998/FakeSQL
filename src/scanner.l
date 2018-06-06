@@ -24,6 +24,7 @@ ANALYZE             { return ANALYZE; }
 AND                 { return ANDOP; }
 AS                  { return AS; }
 ASC                 { return ASC; }
+AUTO_INCREMENT      { return AUTO_INCREMENT; }
 
 BEFORE              { return BEFORE; }
 BETWEEN             { return BETWEEN; }
@@ -41,6 +42,7 @@ CHAR(ACTER?)        { return CHAR; }
 CHECK               { return CHECK; }
 COLLATE             { return COLLATE; }
 COLUMN              { return COLUMN; }
+COMMENT             { return COMMENT; }
 COMMIT              { return COMMIT; }
 CONDITION           { return CONDITION; }
 CONSTRAINT          { return CONSTRAINT; }
@@ -71,6 +73,7 @@ DESCRIBE            { return DESCRIBE; }
 DELAYED             { return DELAYED; }
 DISTINCT            { return DISTINCT; }
 DISTINCTROW         { return DISTINCTROW; }
+DATETIME            { return DATETIME; }
 DOUBLE              { return DOUBLE; }
 DROP                { return DROP; }
 DYNAMIC             { return DYNAMIC; }
@@ -93,6 +96,7 @@ FORCE               { return FORCE; }
 FOREIGN             { return FOREIGN; }
 FROM                { return FROM; }
 FULL                { return FULL; }
+FULLTEXT            { return FULLTEXT; }
 FUNCTION            { return FUNCTION; }
 
 GLOBAL              { return GLOBAL; }
