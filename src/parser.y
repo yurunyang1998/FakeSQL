@@ -50,6 +50,7 @@ int yylex();
 %token AS
 %token ASC
 %token AUTO_INCREMENT
+%token ANY
 
 %token BEFORE
 %token BETWEEN
@@ -58,6 +59,7 @@ int yylex();
 %token BY
 %token BINARY
 %token BOTH
+%token BLOB
 
 %token CALL
 %token CASE
@@ -102,6 +104,7 @@ int yylex();
 %token DOUBLE
 %token DROP
 %token DYNAMIC
+%token DAY_HOUR
 
 %token EACH
 %token ELSE
@@ -113,6 +116,7 @@ int yylex();
 %token EXCEPTION
 %token <subtok> EXISTS
 %token EXEC
+%token ENUM
 
 %token FETCH
 %token FIRST
@@ -168,6 +172,8 @@ int yylex();
 %token LIKE
 %token LIMIT
 %token LOW_PRIORITY
+%token LONGTEXT
+%token LONGBLOB
 
 %token MINUTE
 %token MOD
@@ -175,6 +181,10 @@ int yylex();
 %token MODIFY
 %token MODULE
 %token MONTH
+%token MEDIUMINT
+%token MEDIUMTEXT
+%token MEDIUMBLOB
+%token MATCH
 
 %token NATIONAL
 %token NAMES
@@ -215,6 +225,9 @@ int yylex();
 %token ROW
 %token ROLLUP
 %token REPLACE
+%token REAL
+%token READ
+%token READS
 
 %token SELECT
 %token SESSION
@@ -234,6 +247,7 @@ int yylex();
 %token STRAIGHT_JOIN
 %token SCHEMA
 %token SCHEMAS
+%token SMALLINT
 
 %token TABLE
 %token TEXT
@@ -244,6 +258,7 @@ int yylex();
 %token TIME
 %token TIMESTAMP
 %token TRAILING
+%token TINYBLOB
 
 %token UNDO
 %token UNION
@@ -287,7 +302,9 @@ int yylex();
 %type <intval> column_list left_or_right opt_outer
 %type <intval> index_list opt_for_join delete_opts delete_list
 %type <intval> opt_if_not_exists insert_opts insert_vals_list insert_asgn_list
-%type <intval> insert_vals update_opts update_asgn_list
+%type <intval> insert_vals update_opts update_asgn_list opt_temporary create_col_list
+%type <intval> column_atts data_type opt_length opt_binary opt_uz enum_list
+%type <intval> opt_ignore_replace opt_val_list val_list
 
 
 %left <subtok> COMPARISON
@@ -588,27 +605,27 @@ update_asgn_list: NAME COMPARISON expr                      { if($2 != 4) { prin
 stmt: create_table_stmt { emit("STMT"); }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '(' create_col_list ')'
-                 create_select_statement    { emit("CREATE %d %d %d %s", $2, $4, $7, $5); free($5); }
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
+                 { emit("CREATE %d %d %d %s", $2, $4, $7, $5); free($5); }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '.' NAME '(' create_col_list ')'
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME '(' create_col_list ')'
                  { emit("CREATE %d %d %d %s.%s", $2, $4, $9, $5, $7); free($5); free($7); }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '(' create_col_list ')'
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
                  create_select_statement    { emit("CREATESELECT %d %d %d 0 %s", $2, $4, $7, $5); free($5); }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '.' NAME '(' create_col_list ')'
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME '(' create_col_list ')'
                  create_select_statement    { emit("CREATESELECT %d %d 0 %s.%s", $2, $4, $5, $7); free($5); free($7); }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME create_select_statement
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME create_select_statement
                  { emit("CREATESELECT %d %d 0 %s", $2, $4, $5); free($5); }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exist NAME '.' NAME create_select_statement
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME create_select_statement
                  { emit("CREATESELECT %d %d 0 %s.%s", $2, $4, $5, $7); free($5); free($7); }
     ;
 
@@ -625,10 +642,10 @@ create_definition: { emit("STARTCOL"); } NAME data_type column_atts { emit("COLU
     ;
 
 column_atts:    { $$ = 0; }
-    | column_atts NOT NULLX                     { emit("ATTR NOTNULL"); $$ = $1 + 1; }
-    | column_atts NULLX
+    | column_atts NOT NULLOP                    { emit("ATTR NOTNULL"); $$ = $1 + 1; }
+    | column_atts NULLOP
     | column_atts DEFAULT STRING                { emit("ATTR DEFAULT STRING %s", $3); free($3); $$ = $1 + 1; }
-    | column_atts DEFAULT INTNUM                { emit("ATTR DEFAULT NUMBER %d", $3); free($3); $$ = $1 + 1; }
+    | column_atts DEFAULT INTNUM                { emit("ATTR DEFAULT NUMBER %d", $3); $$ = $1 + 1; }
     | column_atts DEFAULT APPROXNUM             { emit("ATTR DEFAULT FLOAT %f", $3); $$ = $1 + 1; }
     | column_atts DEFAULT BOOL                  { emit("ATTR DEFAULT BOOL %d", $3); $$ = $1 + 1; }
     | column_atts AUTO_INCREMENT                { emit("ATTR AUTOINC"); $$ = $1 + 1; }
@@ -649,7 +666,7 @@ opt_binary:     { $$ = 0; }
     ;
 
 opt_uz:                 { $$ = 0; }
-    | opt_uz UNISGNED   { $$ = $1 | 1000; }
+    | opt_uz UNSIGNED   { $$ = $1 | 1000; }
     | opt_uz ZEROFILL   { $$ = $1 | 2000; }
     ;
 
@@ -675,12 +692,36 @@ data_type: BIT opt_length                   { $$ = 10000 + $2; }
     | DATETIME          { $$ = 100004; }
     | YEAR              { $$ = 100005; }
     | CHAR opt_length opt_csc               { $$ = 120000 + $2; }
+    | VARCHAR '(' INTNUM ')' opt_csc        { $$ = 130000 + $3; }
+    | BINARY opt_length                     { $$ = 140000 + $2; }
+    | VARBINARY '(' INTNUM ')'              { $$ = 150000 + $3; }
+    | TINYBLOB          { $$ = 160001; }
+    | BLOB              { $$ = 160002; }
+    | MEDIUMBLOB        { $$ = 160004; }
+    | LONGBLOB          { $$ = 160008; }
+    | TINYTEXT opt_binary opt_csc           { $$ = 170000 + $2; }
+    | TEXT opt_binary opt_csc               { $$ = 171000 + $2; }
+    | MEDIUMTEXT opt_binary opt_csc         { $$ = 172000 + $2; }
+    | LONGTEXT opt_binary opt_csc           { $$ = 173000 + $2; }
+    | ENUM '(' enum_list ')' opt_csc        { $$ = 200000 + $3; }
+    | SET '(' enum_list ')' opt_csc         { $$ = 210000 + $3; }
     ;
 
 enum_list: STRING           { emit("ENUMVAL %s", $1); free($1); $$ = 1; }
     | enum_list ',' STRING  { emit("ENUMVAL %s", $3); free($3); $$ = $1 + 1; }
     ;
 
+create_select_statement: opt_ignore_replace opt_as select_stmt  { emit("CREATESELECT %d", $1); }
+    ;
+
+opt_ignore_replace:     { $$ = 0; }
+    | IGNORE            { $$ = 1; }
+    | REPLACE           { $$ = 2; }
+    ;
+
+opt_temporary:          { $$ = 0; }
+    | TEMPORARY         { $$ = 1; }
+    ;
 
 
 
@@ -694,6 +735,98 @@ expr:   NAME            { emit("NAME %s", $1); free($1); }
     | BOOL              { emit("BOOL %d", $1); }
     ;
 
+expr: expr '+' expr             { emit("ADD"); }
+    | expr '-' expr             { emit("SUB"); }
+    | expr '*' expr             { emit("MUL"); }
+    | expr '/' expr             { emit("DIV"); }
+    | expr '%' expr             { emit("MOD"); }
+    | expr MOD expr             { emit("MOD"); }
+    | '-' expr %prec UMINUS     { emit("NEG"); }
+    | expr ANDOP expr           { emit("AND"); }
+    | expr OR expr              { emit("OR"); }
+    | expr XOR expr             { emit("XOR"); }
+    | expr COMPARISON expr      { emit("COM %d", $2); }
+    | expr COMPARISON '(' select_stmt ')'       { emit("CMPSELECT %d", $2); }
+    | expr COMPARISON ANY '(' select_stmt ')'   { emit("CMPANYSELECT %d", $2); }
+    | expr COMPARISON SOME '(' select_stmt ')'  { emit("CMPSOMESELECT %d", $2); }
+    | expr COMPARISON ALL '(' select_stmt ')'   { emit("CMPALLSELECT %d", $2); }
+    | expr '|' expr         { emit("BITOR"); }
+    | expr '&' expr         { emit("BITAND"); }
+    | expr '^' expr         { emit("BITXOR"); }
+    | expr SHIFT expr       { emit("SHIFT %s", $2 == 1 ? "left":"right"); }
+    | NOT expr              { emit("NOT"); }
+    | '!' expr              { emit("NOT"); }
+    | USERVAR ASSIGN expr   { emit("ASSIGN @%s", $1); free($1); }
+    ;
+
+expr: expr IS NULLOP        { emit("ISNULL"); }
+    | expr IS NOT NULLOP    { emit("ISNULL"); emit("NOT"); }
+    | expr IS BOOL          { emit("ISBOOL %d", $3); }
+    | expr IS NOT BOOL      { emit("ISBOOL %d", $4); emit("NOT"); }
+    ;
+
+expr: expr BETWEEN expr AND expr %prec BETWEEN  { emit("BETWEEN"); }
+    ;
+
+opt_val_list:       { $$ = 0; }
+    | val_list
+    ;
+
+expr: expr IN '(' val_list ')'          { emit("ISIN %d", $4); }
+    | expr NOT IN '(' val_list ')'      { emit("ISIN %d", $5); emit("NOT"); }
+    | expr IN '(' select_stmt ')'       { emit("INSELECT"); }
+    | expr NOT IN '(' select_stmt ')'   { emit("INSELECT"); emit("NOT"); }
+    | EXISTS '(' select_stmt ')'        { emit("EXISTS"); if($1) emit("NOT"); }
+    ;
+
+expr: NAME '(' opt_val_list ')'     { emit("CALL %d %s", $3, $1); free($1); }
+    ;
+
+val_list: expr      { $$ = 1; }
+    | expr ',' val_list     { $$ = $3 + 1; }
+    ;
+
+
+/* functions with special syntax */
+
+expr: FCOUNT '(' '*' ')'    { emit("COUNTALL"); }
+    | FCOUNT '(' expr ')'   { emit("CALL 1 COUNT"); }
+
+expr: FSUBSTRING '(' val_list ')'                   { emit("CALL %d SUBSTR", $3); }
+    | FSUBSTRING '(' expr FROM expr ')'             { emit("CALL 2 SUBSTR"); }
+    | FSUBSTRING '(' expr FROM expr FOR expr ')'    { emit("CALL 3 SUBSTR"); }
+    | FTRIM '(' val_list ')'                        { emit("CALL %d TRIM", $3); }
+    | FTRIM '(' trim_ltb expr FROM val_list ')'     { emit("CALL 3 TRIM"); }
+    ;
+
+trim_ltb: LEADING   { emit("INT 1"); }
+    | TRAILING      { emit("INT 2"); }
+    | BOTH          { emit("INT 3"); }
+    ;
+
+expr: FDATE_ADD '(' expr ',' interval_exp ')'   { emit("CALL 3 DATE_ADD"); }
+    | FDATE_SUB '(' expr ',' interval_exp ')'   { emit("CALL 3 DATE_SUB"); }
+    ;
+
+interval_exp: INTERVAL expr DAY_HOUR    { emit("NUMBER 1"); }
+    ;
+
+/* TODO:!!!!!! */
+
+
+/* Set user variables */
+stmt: set_stmt      { emit("STMT"); }
+    ;
+
+set_stmt: SET set_list
+    ;
+
+set_list: set_expr | set_list ',' set_expr
+    ;
+
+set_expr: USERVAR COMPARISON expr   { if($2 != 4) { printf("bad set to @%s", $1); exit(-1); } emit("SET %s", $1); free($1); }
+    | USERVAR ASSIGN expr           { emit("SET %s", $1); free($1); }
+    ;
 
 %%
 

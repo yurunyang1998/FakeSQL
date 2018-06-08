@@ -19,6 +19,7 @@ ADD                 { return ADD; }
 ALL                 { return ALL; }
 ALTER               { return ALTER; }
 ANALYZE             { return ANALYZE; }
+ANY                 { return ANY; }
 
 <BTWMODE>AND        { BEGIN INITIAL; return AND; }
 AND                 { return ANDOP; }
@@ -31,6 +32,7 @@ BETWEEN             { return BETWEEN; }
 INT8|BIGINT         { return BIGINT; }
 BIT                 { return BIT; }
 BOTH                { return BOTH; }
+BLOB                { return BLOB; }
 BY                  { return BY; }
 BINARY              { return BINARY; }
 
@@ -77,6 +79,7 @@ DATETIME            { return DATETIME; }
 DOUBLE              { return DOUBLE; }
 DROP                { return DROP; }
 DYNAMIC             { return DYNAMIC; }
+DAY_HOUR            { return DAY_HOUR; }
 
 EACH                { return EACH; }
 ELSE                { return ELSE; }
@@ -87,6 +90,7 @@ EVERY               { return EVERY; }
 EXCEPT              { return EXCEPT; }
 EXCEPTION           { return EXCEPTION; }
 EXEC                { return EXEC; }
+ENUM                { return ENUM; }
 
 FETCH               { return FETCH; }
 FIRST               { return FIRST; }
@@ -121,6 +125,7 @@ INPUT               { return INPUT; }
 INSERT              { return INSERT; }
 INT4|INTEGER        { return INTEGER; }
 INT1|TINYINT        { return TINYINT; }
+INT2|SMALLINT       { return SMALLINT; }
 INTERVAL            { return INTERVAL; }
 INTO                { return INTO; }
 IS                  { return IS; }
@@ -140,13 +145,19 @@ LOOP                { return LOOP; }
 LIKE                { return LIKE; }
 LIMIT               { return LIMIT; }
 LOW_PRIORITY        { return LOW_PRIORITY; }
+LONGTEXT            { return LONGTEXT; }
+LONGBLOB            { return LONGBLOB; }
 
+MATCH               { return MATCH; }
+MEDIUMBLOB          { return MEDIUMBLOB; }
+MEDIUMTEXT          { return MEDIUMTEXT; }
 MINUTE              { return MINUTE; }
 MOD                 { return MOD; }
 MODIFIES            { return MODIFIES; }
 MODIFY              { return MODIFY; }
 MODULE              { return MODULE; }
 MONTH               { return MONTH; }
+MIDDLEINT|MEDIUMINT { return MEDIUMINT; }
 
 NAMES               { return NAMES; }
 NATIONAL            { return NATIONAL; }
@@ -187,6 +198,9 @@ RIGHT               { return RIGHT; }
 ROLLUP              { return ROLLUP; }
 ROW                 { return ROW; }
 REPLACE             { return REPLACE; }
+REAL                { return REAL; }
+READ                { return READ; }
+READS               { return READS; }
 
 SELECT              { return SELECT; }
 SESSION             { return SESSION; }
