@@ -1,13 +1,23 @@
 #include <iostream>
 #include "vector"
+
 #include "B-tree.cpp"
 
-using namespace std;
+using namespace utlis;
 int main() {
     leaf_node<int,int> a;
-    a.insert(23,10);
-    a.delete_pair(23);
-    cout<<a.key_value_pairs[1].getkey();
-    std::cout << "Hello, World!" << std::endl;
+    a.insert(2,10);
+    a.insert(1,2);
+    a.insert(56,3);
+    a.insert(32,4);
+    a._sort();
+    a.delete_pair(3);
+    std::cout<<a.key_value_pairs[3].getkey();
+    //std::cout << "Hello, World!" << std::endl;
     return 0;
+
+    //vector<vector<int>> a;
+
+
+
 }
