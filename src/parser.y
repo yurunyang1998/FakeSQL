@@ -105,6 +105,9 @@ int yylex();
 %token DROP
 %token DYNAMIC
 %token DAY_HOUR
+%token DAY_MICROSECOND
+%token DAY_MINUTE
+%token DAY_SECOND
 
 %token EACH
 %token ELSE
@@ -138,6 +141,9 @@ int yylex();
 %token HOST
 %token HOUR
 %token HIGH_PRIORITY
+%token HOUR_MICROSECOND
+%token HOUR_MINUTE
+%token HOUR_SECOND
 
 %token IDENTITY
 %token IGNORE
@@ -304,7 +310,7 @@ int yylex();
 %type <intval> opt_if_not_exists insert_opts insert_vals_list insert_asgn_list
 %type <intval> insert_vals update_opts update_asgn_list opt_temporary create_col_list
 %type <intval> column_atts data_type opt_length opt_binary opt_uz enum_list
-%type <intval> opt_ignore_replace opt_val_list val_list
+%type <intval> opt_ignore_replace opt_val_list val_list case_list
 
 
 %left <subtok> COMPARISON
@@ -809,10 +815,41 @@ expr: FDATE_ADD '(' expr ',' interval_exp ')'   { emit("CALL 3 DATE_ADD"); }
     ;
 
 interval_exp: INTERVAL expr DAY_HOUR    { emit("NUMBER 1"); }
+    | INTERVAL expr DAY_MICROSECOND     { emit("NUMBER 2"); }
+    | INTERVAL expr DAY_MINUTE          { emit("NUMBER 3"); }
+    | INTERVAL expr DAY_SECOND          { emit("NUMBER 4"); }
+    | INTERVAL expr YEAR_MONTH          { emit("NUMBER 5"); }
+    | INTERVAL expr YEAR                { emit("NUMBER 6"); }
+    | INTERVAL expr HOUR_MICROSECOND    { emit("NUMBER 7"); }
+    | INTERVAL expr HOUR_MINUTE         { emit("NUMBER 8"); }
+    | INTERVAL expr HOUR_SECOND         { emit("NUMBER 9"); }
     ;
 
-/* TODO:!!!!!! */
+expr: CASE expr case_list END           { emit("CASEVAL %d 0", $3); }
+    | CASE expr case_list ELSE expr END { emit("CASEVAL %d 1", $3); }
+    | CASE case_list END                { emit("CASE %d 0", $2); }
+    | CASE case_list ELSE expr END      { emit("CASE %d 1", $2); }
+    ;
 
+case_list: WHEN expr THEN expr      { $$ = 1; }
+    | case_list WHEN expr THEN expr { $$ = $1 + 1; }
+    ;
+
+expr: expr LIKE expr        { emit("LIKE"); }
+    | expr NOT LIKE expr    { emit("LIKE"); emit("NOT"); }
+    ;
+
+expr: expr REGEXP expr      { emit("REGEXP"); }
+    | expr NOT REGEXP expr  { emit("REGEXP"); emit("NOT"); }
+    ;
+
+expr: CURRENT_TIMESTAMP     { emit("NOW"); }
+    | CURRENT_DATE          { emit("NOW"); }
+    | CURRENT_TIME          { emit("NOW"); }
+    ;
+
+expr: BINARY expr %prec UMINUS      { emit("STRTOBIN"); }
+    ;
 
 /* Set user variables */
 stmt: set_stmt      { emit("STMT"); }

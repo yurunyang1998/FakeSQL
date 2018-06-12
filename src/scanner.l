@@ -80,6 +80,9 @@ DOUBLE              { return DOUBLE; }
 DROP                { return DROP; }
 DYNAMIC             { return DYNAMIC; }
 DAY_HOUR            { return DAY_HOUR; }
+DAY_MICROSECOND     { return DAY_MICROSECOND; }
+DAY_MINUTE          { return DAY_MINUTE; }
+DAY_SECOND          { return DAY_SECOND; }
 
 EACH                { return EACH; }
 ELSE                { return ELSE; }
@@ -111,6 +114,9 @@ GROUPING            { return GROUPING; }
 HAVING              { return HAVING; }
 HOST                { return HOST; }
 HOUR                { return HOUR; }
+HOUR_MICROSECOND    { return HOUR_MICROSECOND; }
+HOUR_MINUTE         { return HOUR_MINUTE; }
+HOUR_SECOND         { return HOUR_SECOND; }
 
 IDENTITY            { return IDENTITY; }
 IGNORE              { return IGNORE; }
