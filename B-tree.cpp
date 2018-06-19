@@ -7,6 +7,7 @@
 #include "iostream"
 
 
+
 using namespace std;
 namespace utlis {
 
@@ -38,15 +39,79 @@ namespace utlis {
     };
 
 
+    template <class key_type>
+    class key_value_pair_for_middle_node
+    {
+        //typename  middle_node<key_type>  middle_node;
+    public:
+
+        key_type key;
+        middle_node<key_type> * value = new middle_node<key_type> ;
+    public:
+        key_value_pair_for_middle_node(key_type key ,middle_node<key_type> * value)
+        {
+            this->key=key;
+            this->value=value;
+        }
+        key_type getkey(void) { return key ; }
+        middle_node<key_type> getvalue(void) { return  value; }
+        void set_key(key_type  set_key)
+        {   key = set_key;
+            //return 0;
+        }
+
+        void set_value(middle_node<key_type> * set_value )
+        {
+            value = set_value;
+        }
+    };
+
+
+
+
+
+
+
+    template <class key_type>
+    class middle_node
+    {
+
+    private:
+        middle_node<key_type> * parent_node = new middle_node<key_type>;
+    public:
+        middle_node( middle_node<key_type> *parent_node=NULL)
+        {
+            this->parent_node = parent_node;
+
+        }
+    };
+
+
+
+
+
+
+
+
+
     template <class key_type,class value_type>
     class leaf_node
     {
     public:
+        middle_node<key_type> * parent_node = new middle_node<key_type>;  //父亲节点
+        leaf_node<key_type,value_type> * brother_node = new leaf_node<key_type,value_type>;
         //vector<int> v = vector<int>(10, 0);
         vector< key_value_pair<key_type,value_type> >  key_value_pairs  = vector< key_value_pair<key_type,value_type> >(1);
         int used_pairs;
     public:
-        leaf_node(){used_pairs=0;};
+        leaf_node(middle_node<key_type> * parent_node= nullptr,
+                  leaf_node<key_type,value_type> * brother_node = nullptr)
+        {
+            used_pairs=0;
+            this->parent_node = parent_node;
+            this->brother_node = brother_node;
+
+        };
 
         int  insert(key_type key ,value_type value)
         {
@@ -105,12 +170,7 @@ namespace utlis {
     };
 
 
-
-
-
-
-
-    template <typename key_type,typename value_type>
+    template <typename key_type,typename value_type>   //叶节点内的sort函数
     bool operator< (key_value_pair<key_type,value_type> &s1 ,  key_value_pair<key_type,value_type> &s2)
     {
         return s1.key<s2.key;
@@ -118,6 +178,18 @@ namespace utlis {
 
 
 
+
+
+
+
+    template <class key_type>
+    class root
+    {
+        root()
+        {
+
+        }
+    };
 
 
 }
