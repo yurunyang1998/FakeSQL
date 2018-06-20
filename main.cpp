@@ -5,15 +5,18 @@
 
 using namespace utlis;
 int main() {
-    leaf_node<int,int> a;
-    a.insert(2,10);
-    a.insert(1,2);
-    a.insert(56,3);
-    a.insert(32,4);
-    a._sort();
-    a.delete_pair(3);
-    std::cout<<a.key_value_pairs[3].getkey();
-    //std::cout << "Hello, World!" << std::endl;
+
+
+    middle_node<int> a;
+    //middle_node<int> *c =  new middle_node<int>;
+    //middle_node<int> *d =  new middle_node<int>;
+//
+    leaf_node<int,int> * b = new leaf_node<int,int>;
+    //a.insert(1,c);
+    leaf_node<int,int> * c = new leaf_node<int,int>;
+    a.insert(2,b);
+    a.insert(3,c);
+    int s;
     return 0;
 
     //vector<vector<int>> a;

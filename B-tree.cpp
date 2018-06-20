@@ -6,10 +6,12 @@
 #include <algorithm>
 #include "iostream"
 
-
-
 using namespace std;
 namespace utlis {
+
+
+
+
 
 
     template <class key_type,class value_type>
@@ -39,28 +41,87 @@ namespace utlis {
     };
 
 
+
+    template <class key_type>
+    class key_value_pair_for_middle_node;
+
+    template <class key_type,class value_type>
+    class leaf_node;
+
+
+    template <class key_type>
+    class middle_node
+    {
+
+    private:
+        typedef middle_node<key_type> middle_node_t;
+
+        //middle_node<key_type> * parent_node = new middle_node<key_type>;
+        //middle_node_t * parent_node;
+        vector< key_value_pair_for_middle_node<key_type> >   key_value_pair_for_middle_node_t ;
+
+
+               //vector< key_value_pair_for_middle_node<key_type> > ;
+    public:
+        middle_node()//middle_node_t  * _parent_node = nullptr)
+        //: parent_node(_parent_node)
+        {
+
+        }
+        void insert(key_type key , middle_node_t * value)
+        {
+            key_value_pair_for_middle_node_t.push_back( key_value_pair_for_middle_node <key_type>(key,value));
+        }
+
+        void insert(key_type key , leaf_node<key_type,int> * value)
+        {
+            key_value_pair_for_middle_node_t.push_back( key_value_pair_for_middle_node <key_type>(key,value));
+        }
+    };
+
+
+
+
+
+
+
+
     template <class key_type>
     class key_value_pair_for_middle_node
     {
-        //typename  middle_node<key_type>  middle_node;
-    public:
+        typedef middle_node<key_type>  middle_node_t;
+    private:
 
         key_type key;
-        middle_node<key_type> * value = new middle_node<key_type> ;
+        middle_node_t * value  ;
+
+        leaf_node<key_type,int>   *leaf_node1;
+
     public:
-        key_value_pair_for_middle_node(key_type key ,middle_node<key_type> * value)
+        key_value_pair_for_middle_node(key_type key=nullptr, middle_node_t * value= nullptr):
+                key(key),value(value)
         {
-            this->key=key;
-            this->value=value;
+//            this->key=key;
+//            this->value=value;
         }
+
+
+        key_value_pair_for_middle_node(key_type key=nullptr, leaf_node<key_type,int> * value= nullptr):
+                key(key),leaf_node1(value)
+        {
+
+        }
+
+
         key_type getkey(void) { return key ; }
-        middle_node<key_type> getvalue(void) { return  value; }
+        middle_node_t * getvalue(void) { return  value; }
         void set_key(key_type  set_key)
-        {   key = set_key;
+        {
+            key = set_key;
             //return 0;
         }
 
-        void set_value(middle_node<key_type> * set_value )
+        void set_value(middle_node_t * set_value )
         {
             value = set_value;
         }
@@ -70,42 +131,18 @@ namespace utlis {
 
 
 
-
-
-    template <class key_type>
-    class middle_node
-    {
-
-    private:
-        middle_node<key_type> * parent_node = new middle_node<key_type>;
-    public:
-        middle_node( middle_node<key_type> *parent_node=NULL)
-        {
-            this->parent_node = parent_node;
-
-        }
-    };
-
-
-
-
-
-
-
-
-
     template <class key_type,class value_type>
     class leaf_node
     {
     public:
-        middle_node<key_type> * parent_node = new middle_node<key_type>;  //父亲节点
-        leaf_node<key_type,value_type> * brother_node = new leaf_node<key_type,value_type>;
+        middle_node<key_type> * parent_node ;//= new middle_node<key_type>;  //父亲节点
+        leaf_node<key_type,value_type> * brother_node ;//= new leaf_node<key_type,value_type>;
         //vector<int> v = vector<int>(10, 0);
         vector< key_value_pair<key_type,value_type> >  key_value_pairs  = vector< key_value_pair<key_type,value_type> >(1);
         int used_pairs;
     public:
         leaf_node(middle_node<key_type> * parent_node= nullptr,
-                  leaf_node<key_type,value_type> * brother_node = nullptr)
+                  leaf_node<key_type,value_type> * brother_node = nullptr)//:parent_node(parent_node),brother_node(brother_node)
         {
             used_pairs=0;
             this->parent_node = parent_node;
