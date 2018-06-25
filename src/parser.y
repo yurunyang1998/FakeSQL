@@ -1,10 +1,13 @@
 %require "3.0.4"
+
+
 %{
 
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#include "driver.h"
 
 void emit(char *s, ...);
 void yyerror(char *, ...);
@@ -871,12 +874,27 @@ set_expr: USERVAR COMPARISON expr   { if($2 != 4) { printf("bad set to @%s", $1)
 /* for linker non error */
 void emit(char *s, ...)
 {
+    extern int yylineno;
 
+    va_list ap;
+    va_start(ap, s);
+
+    printf("rpn: ");
+    vfprintf(stdout, s, ap);
+    printf("\n");
     return ;
 }
 
 void yyerror(char *s, ...)
 {
+    extern int yylineno;
 
+    va_list ap;
+    va_start(ap, s);
+
+    fprintf(stderr, "%d: error", yylineno);
+    vfprintf(stderr, s, ap);
+    fprintf(stderr, "\n");
     return ;
 }
+
