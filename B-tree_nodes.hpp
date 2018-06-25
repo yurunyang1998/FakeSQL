@@ -347,6 +347,20 @@ namespace utlis {
         }
 
 
+        value_type searchkey(key_type key)
+        {
+            typename vector<key_value_pair<key_type,value_type>>::iterator item =  key_value_pairs.begin();
+            while(item!=key_value_pairs.end())
+            {
+                if(item->getkey()==key)
+                {
+                    return item->getvalue();
+                }
+            }
+            return nullptr;
+        }
+
+
 
 
         friend bool operator< (key_value_pair<key_type,value_type> &s1 ,  key_value_pair<key_type,value_type> &s2);

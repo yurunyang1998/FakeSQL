@@ -8,6 +8,7 @@ int main() {
 
 
     Manager<int,int> manager(1);
+    manager.data_insert(1);
     int a;
 
 

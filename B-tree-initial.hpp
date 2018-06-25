@@ -41,23 +41,17 @@ namespace  utlis {
         }
 
 
-        int data_insert(key_type key ,value_type value)
+        int data_insert(key_type key)
         {
             try {
 
                 if(!whether_initialed)
                     throw(-1);
-
                 middle_node_t * temp_node =root;
                 while(1)
                 {
-                    //temp_node = temp_node.
-
+                    temp_node = temp_node->searchkey(key);
                 }
-
-
-
-
             }
 
 
