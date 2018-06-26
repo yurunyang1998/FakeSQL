@@ -162,7 +162,7 @@ namespace utlis {
                 {
                     if(item->getkey() >= key)
                     {
-                        points_struct_t->flag =1;
+                        points_struct_t->flag =1;      //找到的是中间节点
                         points_struct_t->leaf_node_point= nullptr;
                         points_struct_t->middle_node_point=item->getvalue();
                         return points_struct_t;
@@ -170,7 +170,7 @@ namespace utlis {
                     }
                     item++;
                 }
-                points_struct_t->flag=0;
+                points_struct_t->flag=0;  //没有找到相关节点
                 points_struct_t->middle_node_point= nullptr;
                 points_struct_t->middle_node_point= nullptr;
                 return points_struct_t;
@@ -183,7 +183,7 @@ namespace utlis {
                 {
                     if(item->getkey() >= key)
                     {
-                        points_struct_t->flag=2;
+                        points_struct_t->flag=2; //找到的是叶子节点
                         points_struct_t->leaf_node_point=item->getvalue();
                         points_struct_t->middle_node_point = nullptr;
                         return points_struct_t;
@@ -378,7 +378,7 @@ namespace utlis {
                     return item->getvalue();
                 }
             }
-            return nullptr;
+            return 0;
         }
 
 

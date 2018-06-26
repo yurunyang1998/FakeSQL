@@ -41,25 +41,36 @@ namespace  utlis {
         }
 
 
-        int data_insert(key_type key)
+        int data_search(key_type key)
         {
             try {
 
                 if(!whether_initialed)
                     throw(-1);
                 middle_node_t * temp_node =root;
+                points_struct<key_type,value_type>*  point  = new points_struct<key_type,value_type>;
+
                 while(1)
                 {
-                    points_struct<key_type,value_type>*  point  = new points_struct<key_type,value_type>;
 
                     point = temp_node->searchkey(key);
+                    //break;
+                    if(point->flag==0)
+                        throw (-2);
+                    if(point->flag==1)
+                    {
+                        point=point->middle_node_point->searchkey(key);
+                    }
+                    if(point->flag==2)
+                    {
+                        value_type value ;
+                        value =point->leaf_node_point->searchkey(key);
+                        cout<<value;
+                        break;
+                    }
+
                 }
             }
-
-
-
-
-
 
 
             catch(int &error)
@@ -68,6 +79,11 @@ namespace  utlis {
                 {
                     cout<<"树未初始化";
                     return -1;
+                }
+                if(error = -2)
+                {
+                    cout<<"The tree has not this key";
+                    return -2;
                 }
             }
 
