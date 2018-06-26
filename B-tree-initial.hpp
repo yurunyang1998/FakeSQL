@@ -50,7 +50,9 @@ namespace  utlis {
                 middle_node_t * temp_node =root;
                 while(1)
                 {
-                    temp_node = temp_node->searchkey(key);
+                    points_struct<key_type,value_type>*  point  = new points_struct<key_type,value_type>;
+
+                    point = temp_node->searchkey(key);
                 }
             }
 

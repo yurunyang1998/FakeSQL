@@ -16,6 +16,7 @@ namespace utlis {
 
 
 
+
     template <class key_type,class value_type>
     class key_value_pair_for_middle_node;
 
@@ -33,6 +34,13 @@ namespace utlis {
     class key_value_pair;
 
 
+    template <class key_type,class value_type>
+    struct points_struct
+    {
+        int flag = 0;
+        middle_node<key_type,value_type> * middle_node_point;
+        leaf_node<key_type,value_type> * leaf_node_point;
+    };
 
 
 
@@ -141,8 +149,10 @@ namespace utlis {
         }
 
 
-        void * searchkey(key_type key)
+         points_struct<key_type,value_type> *  searchkey(key_type key)
         {
+            points_struct<key_type,value_type> * points_struct_t = new points_struct<key_type,value_type>;
+
             if(flag ==0)
             {
                 typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item
@@ -152,13 +162,18 @@ namespace utlis {
                 {
                     if(item->getkey() >= key)
                     {
-
-                        return item->getvalue();
+                        points_struct_t->flag =1;
+                        points_struct_t->leaf_node_point= nullptr;
+                        points_struct_t->middle_node_point=item->getvalue();
+                        return points_struct_t;
 
                     }
                     item++;
                 }
-                return nullptr;
+                points_struct_t->flag=0;
+                points_struct_t->middle_node_point= nullptr;
+                points_struct_t->middle_node_point= nullptr;
+                return points_struct_t;
             } else
             {
                 typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >::iterator item
@@ -168,12 +183,18 @@ namespace utlis {
                 {
                     if(item->getkey() >= key)
                     {
-                        return item->getvalue();
+                        points_struct_t->flag=2;
+                        points_struct_t->leaf_node_point=item->getvalue();
+                        points_struct_t->middle_node_point = nullptr;
+                        return points_struct_t;
                     }
                     item++;
 
                 }
-                return nullptr;
+                points_struct_t->flag=0;
+                points_struct_t->middle_node_point= nullptr;
+                points_struct_t->middle_node_point= nullptr;
+                return points_struct_t;
             }
 
 
