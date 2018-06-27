@@ -27,13 +27,20 @@ namespace  utlis {
 
 
 
-        middle_node <key_type, value_type> * initial_B_tree(key_type key) {
+        middle_node <key_type, value_type> * initial_B_tree(key_type key)
+        {
 
             middle_node<key_type, value_type> *root = new middle_node<key_type, value_type>;
             middle_node<key_type, value_type> *child_1 = new middle_node<key_type, value_type>(root);
             leaf_node<key_type, value_type> *leaf_node1 = new leaf_node<key_type, value_type>(child_1);
             root->insert(key, child_1);
             child_1->insert(key, leaf_node1);
+
+            leaf_node1->insert(12,321);
+
+
+            leaf_node1->insert(32,43);
+
             whether_initialed =1;
 
 
@@ -50,10 +57,12 @@ namespace  utlis {
                 middle_node_t * temp_node =root;
                 points_struct<key_type,value_type>*  point  = new points_struct<key_type,value_type>;
 
+                point = temp_node->searchkey(key);//#
+                //cout<<point->flag;
                 while(1)
                 {
 
-                    point = temp_node->searchkey(key);
+                    //#point = temp_node->searchkey(key);
                     //break;
                     if(point->flag==0)
                         throw (-2);
@@ -61,11 +70,11 @@ namespace  utlis {
                     {
                         point=point->middle_node_point->searchkey(key);
                     }
-                    if(point->flag==2)
+                    else
                     {
                         value_type value ;
                         value =point->leaf_node_point->searchkey(key);
-                        cout<<value;
+                        cout<<value<<endl;
                         break;
                     }
 

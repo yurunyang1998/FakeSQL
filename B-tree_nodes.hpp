@@ -375,8 +375,10 @@ namespace utlis {
             {
                 if(item->getkey()==key)
                 {
+                    //cout<<item->getkey();
                     return item->getvalue();
                 }
+                item++;
             }
             return 0;
         }
