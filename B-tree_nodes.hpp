@@ -144,10 +144,13 @@ namespace utlis {
         middle_node(middle_node_t  * _parent_node = nullptr)
         : parent_node(_parent_node)
         {
-
-
         }
 
+
+        int user_paires()
+        {
+            return  used_pairs;
+        }
 
          points_struct<key_type,value_type> *  searchkey(key_type key)
         {
