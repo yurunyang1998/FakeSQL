@@ -111,8 +111,8 @@ namespace  utlis {
 
         int insert_data(key_type key,value_type value)
         {
-            middle_node  * temp_root = root;
-            points_struct * point<key_type,value_type> = new points_struct<key_type,value_type>;
+            middle_node<key_type,value_type>  * temp_root = root;
+            points_struct<key_type,value_type> * point = new points_struct<key_type,value_type>;
 
             while (1) {
                 point = temp_root->searchkey(key);
@@ -123,7 +123,10 @@ namespace  utlis {
                         break;
                     } else
                     {
-                        temp_root->insert()
+
+                        middle_node<key_type,value_type>  * middle_node_t = new middle_node<key_type,value_type>;
+                        leaf_node<key_type,value_type>  *  leaf_node_t =  new leaf_node<key_type,value_type>(middle_node_t);
+                        temp_root->insert(key,middle_node_t);
                     }
                 }
             }

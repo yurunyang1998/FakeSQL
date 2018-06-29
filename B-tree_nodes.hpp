@@ -422,14 +422,7 @@ namespace utlis {
 
 
 
-    template <class key_type>
-    class root
-    {
-        root()
-        {
 
-        }
-    };
 
 
 }
