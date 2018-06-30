@@ -134,7 +134,7 @@ namespace utlis {
         middle_node_t * parent_node;
         int flag =-1;
         int used_pairs =0;
-        key_type key;
+        key_type Maxkey;
         vector< key_value_pair_for_middle_node<key_type,value_type> >   key_value_pair_for_middle_node_t ;
         vector< key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >
                 key_value_pair_for_middle_node_which_next_node_is_leaf_node_t ;
@@ -145,6 +145,26 @@ namespace utlis {
         : parent_node(_parent_node)
         {
         }
+
+        key_type updatekey()
+        {
+            typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item
+                    =key_value_pair_for_middle_node_t.end();
+            this->Maxkey = item->key;
+            return Maxkey;
+        }
+
+//
+//        key_type setkey(key_type key)
+//        {
+//            Maxkey = key;
+//            return Maxkey;
+//        }
+//
+//
+
+
+
 
 
         int user_paires()
@@ -165,14 +185,15 @@ namespace utlis {
                 {
                     if(item->getkey() >= key)
                     {
-                        points_struct_t->flag =1;      //找到的是中间节点
-                        points_struct_t->leaf_node_point= nullptr;
-                        points_struct_t->middle_node_point=item->getvalue();
+                        cout<<item->getkey()<<endl;                                                      //
+                        points_struct_t->flag =1;      //找到的是中间节点                                //
+                        points_struct_t->leaf_node_point= nullptr;                                      //
+                        points_struct_t->middle_node_point=item->getvalue();                             //
                         return points_struct_t;
-
                     }
                     item++;
                 }
+                cout<<1<<endl;
                 points_struct_t->flag=0;  //没有找到相关节点
                 points_struct_t->middle_node_point= nullptr;
                 points_struct_t->middle_node_point= nullptr;

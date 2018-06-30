@@ -44,7 +44,7 @@ namespace  utlis {
 
 
             child_1->insert(key, leaf_node1);
-            leaf_node1->insert(12,321);
+            //leaf_node1->insert(12,321);
 
             whether_initialed =1;
 
@@ -126,6 +126,8 @@ namespace  utlis {
 
                         middle_node<key_type,value_type>  * middle_node_t = new middle_node<key_type,value_type>;
                         leaf_node<key_type,value_type>  *  leaf_node_t =  new leaf_node<key_type,value_type>(middle_node_t);
+                        middle_node_t->insert(key,leaf_node_t);
+                        middle_node_t->updatekey();
                         temp_root->insert(key,middle_node_t);
                     }
                 }
