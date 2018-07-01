@@ -148,22 +148,18 @@ namespace utlis {
 
         key_type updatekey()
         {
-            typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item
-                    =key_value_pair_for_middle_node_t.end();
-            this->Maxkey = item->key;
-            return Maxkey;
+            if(flag==1) {
+                typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
+                        key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end() - 1;
+                this->Maxkey = item->key;
+                return Maxkey;
+            } else{
+                typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.begin();
+                this->Maxkey = item->key;
+                return Maxkey;
+            }
+
         }
-
-//
-//        key_type setkey(key_type key)
-//        {
-//            Maxkey = key;
-//            return Maxkey;
-//        }
-//
-//
-
-
 
 
 

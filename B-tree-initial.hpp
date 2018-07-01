@@ -127,8 +127,10 @@ namespace  utlis {
                         middle_node<key_type,value_type>  * middle_node_t = new middle_node<key_type,value_type>;
                         leaf_node<key_type,value_type>  *  leaf_node_t =  new leaf_node<key_type,value_type>(middle_node_t);
                         middle_node_t->insert(key,leaf_node_t);
+                        leaf_node_t->insert(key,value);
                         middle_node_t->updatekey();
                         temp_root->insert(key,middle_node_t);
+                        return 1;
                     }
                 }
             }
