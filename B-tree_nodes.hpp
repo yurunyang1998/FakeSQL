@@ -16,6 +16,7 @@ namespace utlis {
 
 
 
+
     template <class key_type,class value_type>
     class key_value_pair_for_middle_node;
 
@@ -33,6 +34,13 @@ namespace utlis {
     class key_value_pair;
 
 
+    template <class key_type,class value_type>
+    struct points_struct
+    {
+        int flag = 0;
+        middle_node<key_type,value_type> * middle_node_point;
+        leaf_node<key_type,value_type> * leaf_node_point;
+    };
 
 
 
@@ -126,7 +134,7 @@ namespace utlis {
         middle_node_t * parent_node;
         int flag =-1;
         int used_pairs =0;
-        key_type key;
+        key_type Maxkey;
         vector< key_value_pair_for_middle_node<key_type,value_type> >   key_value_pair_for_middle_node_t ;
         vector< key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >
                 key_value_pair_for_middle_node_which_next_node_is_leaf_node_t ;
@@ -136,13 +144,34 @@ namespace utlis {
         middle_node(middle_node_t  * _parent_node = nullptr)
         : parent_node(_parent_node)
         {
+        }
 
+        key_type updatekey()
+        {
+            if(flag==1) {
+                typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
+                        key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end() - 1;
+                this->Maxkey = item->key;
+                return Maxkey;
+            } else{
+                typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.begin();
+                this->Maxkey = item->key;
+                return Maxkey;
+            }
 
         }
 
 
-        void * searchkey(key_type key)
+
+        int user_paires()
         {
+            return  used_pairs;
+        }
+
+         points_struct<key_type,value_type> *  searchkey(key_type key)
+        {
+            points_struct<key_type,value_type> * points_struct_t = new points_struct<key_type,value_type>;
+
             if(flag ==0)
             {
                 typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item
@@ -152,13 +181,19 @@ namespace utlis {
                 {
                     if(item->getkey() >= key)
                     {
-
-                        return item->getvalue();
-
+                        cout<<item->getkey()<<endl;                                                      //
+                        points_struct_t->flag =1;      //找到的是中间节点                                //
+                        points_struct_t->leaf_node_point= nullptr;                                      //
+                        points_struct_t->middle_node_point=item->getvalue();                             //
+                        return points_struct_t;
                     }
                     item++;
                 }
-                return nullptr;
+                cout<<1<<endl;
+                points_struct_t->flag=0;  //没有找到相关节点
+                points_struct_t->middle_node_point= nullptr;
+                points_struct_t->middle_node_point= nullptr;
+                return points_struct_t;
             } else
             {
                 typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >::iterator item
@@ -168,12 +203,18 @@ namespace utlis {
                 {
                     if(item->getkey() >= key)
                     {
-                        return item->getvalue();
+                        points_struct_t->flag=2; //找到的是叶子节点
+                        points_struct_t->leaf_node_point=item->getvalue();
+                        points_struct_t->middle_node_point = nullptr;
+                        return points_struct_t;
                     }
                     item++;
 
                 }
-                return nullptr;
+                points_struct_t->flag=0;
+                points_struct_t->middle_node_point= nullptr;
+                points_struct_t->middle_node_point= nullptr;
+                return points_struct_t;
             }
 
 
@@ -272,6 +313,7 @@ namespace utlis {
         void set_key(key_type  set_key)
         {   key = set_key;
             //return 0;
+            int xiajibaxiede ;
         }
 
         void set_value(value_type set_value )
@@ -354,10 +396,12 @@ namespace utlis {
             {
                 if(item->getkey()==key)
                 {
+                    //cout<<item->getkey();
                     return item->getvalue();
                 }
+                item++;
             }
-            return nullptr;
+            return 0;
         }
 
 
@@ -396,14 +440,7 @@ namespace utlis {
 
 
 
-    template <class key_type>
-    class root
-    {
-        root()
-        {
 
-        }
-    };
 
 
 }
