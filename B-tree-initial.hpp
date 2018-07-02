@@ -99,7 +99,8 @@ namespace  utlis {
 
                     return -1;
                 }
-                if(error = -2)
+                // if(error = -2)
+                if(error == -2)
                 {
                     cout<<"The tree has not this key";
                     return -2;
