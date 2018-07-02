@@ -113,9 +113,9 @@ namespace  utlis {
         {
             middle_node<key_type,value_type>  * temp_root = root;
             points_struct<key_type,value_type> * point = new points_struct<key_type,value_type>;
-
+            point = temp_root->searchkey(key);
             while (1) {
-                point = temp_root->searchkey(key);
+                //point = temp_root->searchkey(key);
                 if (point->flag == 0)  //没有找到相关节点
                 {
                     if (temp_root->user_paires() > 10) {
@@ -132,6 +132,22 @@ namespace  utlis {
                         temp_root->insert(key,middle_node_t);
                         return 1;
                     }
+                } else   //找到了相关节点
+                {
+                        while(point->flag==1)
+                        {
+                            point = point->middle_node_point->searchkey(key);
+                        }
+                        //差一个计数器用来保证行插入的节点使树的层之间保持平衡
+                        if(point->flag==0)
+                        {
+                            //cout<<2<<endl;
+                        }
+                        if(point->flag==2){
+                            point->leaf_node_point->insert(key,value);
+                            return 1;
+                        }
+                        //if(point)
                 }
             }
 

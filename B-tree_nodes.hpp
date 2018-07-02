@@ -174,6 +174,7 @@ namespace utlis {
 
             if(flag ==0)
             {
+
                 typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item
                         =key_value_pair_for_middle_node_t.begin();
 
@@ -181,7 +182,7 @@ namespace utlis {
                 {
                     if(item->getkey() >= key)
                     {
-                        cout<<item->getkey()<<endl;                                                      //
+                        //cout<<item->getkey()<<endl;                                                      //
                         points_struct_t->flag =1;      //找到的是中间节点                                //
                         points_struct_t->leaf_node_point= nullptr;                                      //
                         points_struct_t->middle_node_point=item->getvalue();                             //
@@ -189,13 +190,14 @@ namespace utlis {
                     }
                     item++;
                 }
-                cout<<1<<endl;
+                //cout<<1<<endl;
                 points_struct_t->flag=0;  //没有找到相关节点
                 points_struct_t->middle_node_point= nullptr;
                 points_struct_t->middle_node_point= nullptr;
                 return points_struct_t;
             } else
             {
+
                 typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >::iterator item
                         = key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.begin();
 
@@ -245,11 +247,20 @@ namespace utlis {
 
         int insert(key_type key , leaf_node<key_type,value_type> * value)
         {
+
+
+
+
             if(flag==0)
                 return 1; //子节点不可同时存在既有叶子节点又有中间节点的情况
             if(used_pairs>10)
                 return -1;
 
+//            if(used_pairs==0)
+//            {
+//                key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.
+//            }
+//
 
             key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.push_back
                     ( key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type>(key,value));
@@ -303,7 +314,7 @@ namespace utlis {
         key_type key;
         value_type value;
     public:
-        key_value_pair(key_type key=NULL,value_type value=NULL)
+        key_value_pair(key_type key=1111,value_type value=1111)
         {
             this->key=key;
             this->value=value;
@@ -332,7 +343,8 @@ namespace utlis {
         middle_node<key_type,value_type> * parent_node ;//= new middle_node<key_type>;  //父亲节点
         leaf_node<key_type,value_type> * brother_node ;//= new leaf_node<key_type,value_type>;
         //vector<int> v = vector<int>(10, 0);
-        vector< key_value_pair<key_type,value_type> >  key_value_pairs  = vector< key_value_pair<key_type,value_type> >(1);
+        //vector< key_value_pair<key_type,value_type> >  key_value_pairs  = vector< key_value_pair<key_type,value_type> >(1);
+        vector<key_value_pair<key_type,value_type>> key_value_pairs;
         int used_pairs;
     public:
         leaf_node(middle_node<key_type,value_type> * parent_node ,
