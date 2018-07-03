@@ -154,7 +154,7 @@ namespace utlis {
                 this->Maxkey = item->key;
                 return Maxkey;
             } else{
-                typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.begin();
+                typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.end()-1;
                 this->Maxkey = item->key;
                 return Maxkey;
             }
@@ -353,12 +353,11 @@ namespace utlis {
             used_pairs=0;
             this->parent_node = parent_node;
             this->brother_node = brother_node;
-
         };
 
         int  insert(key_type key ,value_type value)
         {
-            if(used_pairs==10)
+            if(used_pairs>=10)
             {
                 return 0;  //该叶子节点已满,插入失败
             } else

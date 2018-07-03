@@ -8,12 +8,10 @@ int main() {
 
 
     Manager<int,int> manager(10);
-    for(int i=90;i<1000;i+=100)
-        manager.insert_data(i,i);
-    for(int i=100;i<1000;i+=110)
-        manager.insert_data(i,i);
-    //manager.insert_data(123,523);
-    manager.data_search(760);
+
+    manager.insert_data(140,523);
+    manager.insert_data(139,23);
+    manager.data_search(140);
     int a;
 
 
