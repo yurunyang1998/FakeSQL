@@ -359,9 +359,11 @@ namespace utlis {
         {
             if(used_pairs>=10)
             {
+                cout<<"this node has full"<<endl;
                 return 0;  //该叶子节点已满,插入失败
             } else
             {
+                //cout<<key<<endl;
                 key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
                 key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的vector 中
                 used_pairs++;                       //当前已使用的pair加1

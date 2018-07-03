@@ -7,11 +7,13 @@ using namespace utlis;
 int main() {
 
 
-    Manager<int,int> manager(10);
+    Manager<int,int> manager(1);
 
-    manager.insert_data(140,523);
-    manager.insert_data(139,23);
-    manager.data_search(140);
+    for (int i=0;i<30;i+=1)
+        manager.insert_data(i,i);
+
+//    for(int i =0;i<30;i++)
+//        manager.data_search(i);
     int a;
 
 

@@ -33,25 +33,26 @@ namespace  utlis {
 
             middle_node<key_type, value_type> *root = new middle_node<key_type, value_type>;
             middle_node<key_type, value_type> *child_1 = new middle_node<key_type, value_type>(root);
-            middle_node<key_type,value_type> *child_2 = new middle_node<key_type,value_type>(child_1);
-            leaf_node<key_type, value_type> *leaf_node1 = new leaf_node<key_type, value_type>(child_2);
+            middle_node<key_type,value_type> *child_2 = new middle_node<key_type,value_type>(root);
+            leaf_node<key_type, value_type> *leaf_node1 = new leaf_node<key_type, value_type>(child_1);
 
 
             //middle_node<key_type, value_type> *child_2 = new middle_node<key_type, value_type>(root);
-            //leaf_node<key_type, value_type> *leaf_node2 = new leaf_node<key_type, value_type>(child_1);
+            leaf_node<key_type, value_type> *leaf_node2 = new leaf_node<key_type, value_type>(child_2);
 
 
 
             root->insert(key, child_1);
+            child_1->insert(key,leaf_node1);
             //root->insert(key+100,child_2);
 
 
-            child_1->insert(key,child_2);
-            child_2->insert(key,leaf_node1);
+            root->insert(key+10,child_2);
+            child_2->insert(key+10,leaf_node1);
             //leaf_node1->insert(12,321);
 
             whether_initialed =1;
-            maxdeepth =4;
+            maxdeepth =3;
 
             return root;
         }
@@ -122,8 +123,9 @@ namespace  utlis {
                 //point = temp_root->searchkey(key);
                 if (point->flag == 0)  //没有找到相关节点
                 {
-                    if (temp_root->user_paires() > 10) {
+                    if (temp_root->user_paires() >= 10) {
                         //split_node
+                        cout<<"this node has full2"<<key<<endl;
                         break;
                     } else
                     {
