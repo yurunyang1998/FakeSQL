@@ -33,22 +33,25 @@ namespace  utlis {
 
             middle_node<key_type, value_type> *root = new middle_node<key_type, value_type>;
             middle_node<key_type, value_type> *child_1 = new middle_node<key_type, value_type>(root);
-            leaf_node<key_type, value_type> *leaf_node1 = new leaf_node<key_type, value_type>(child_1);
+            middle_node<key_type,value_type> *child_2 = new middle_node<key_type,value_type>(child_1);
+            leaf_node<key_type, value_type> *leaf_node1 = new leaf_node<key_type, value_type>(child_2);
 
-            middle_node<key_type, value_type> *child_2 = new middle_node<key_type, value_type>(root);
-            leaf_node<key_type, value_type> *leaf_node2 = new leaf_node<key_type, value_type>(child_1);
+
+            //middle_node<key_type, value_type> *child_2 = new middle_node<key_type, value_type>(root);
+            //leaf_node<key_type, value_type> *leaf_node2 = new leaf_node<key_type, value_type>(child_1);
 
 
 
             root->insert(key, child_1);
-            root->insert(key+100,child_2);
+            //root->insert(key+100,child_2);
 
 
-            child_1->insert(key, leaf_node1);
+            child_1->insert(key,child_2);
+            child_2->insert(key,leaf_node1);
             //leaf_node1->insert(12,321);
 
             whether_initialed =1;
-            maxdeepth =3;
+            maxdeepth =4;
 
             return root;
         }
@@ -127,12 +130,12 @@ namespace  utlis {
 
                         middle_node<key_type,value_type> *temp_middle_node = new middle_node<key_type,value_type>(temp_root);
                         temp_root->insert(key,temp_middle_node);
-
+                        temp_root->updatekey();
                         for (int i=0;i<maxdeepth-3;i++)   //计数循环，保持树的平衡
                           {
                               middle_node<key_type,value_type> *middle_node2 = new middle_node<key_type,value_type>(temp_middle_node);
                               temp_middle_node->insert(key,middle_node2);
-                              middle_node2->updatekey();
+                              temp_middle_node->updatekey();
                               temp_middle_node =  middle_node2;
                           }
                         leaf_node<key_type,value_type> * leaf_node1 = new leaf_node<key_type,value_type>(temp_middle_node);
