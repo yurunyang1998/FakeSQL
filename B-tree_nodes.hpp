@@ -303,18 +303,44 @@ namespace utlis {
     /////////////////////////////////////////////////////
     //下面是叶子节点类
 
+    template <class key_type,class value_type>
+    void _split(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr)
+    {
+        if(leaf_node1== nullptr)
+        {
+
+
+
+
+
+        } else{
+            leaf_node<key_type,value_type> * new_leaf_node = new leaf_node<key_type,value_type>(parent_node);
+            //parent_node->insert()
+            for(int i=0;i<5;i++)
+            {
+                new_leaf_node->insert(leaf_node1->pop_key(),leaf_node1->pop_value());
+                new_leaf_node->delete_pair();
+            }
+
+            parent_node->insert(new_leaf_node->pop_key(),new_leaf_node);
+
+
+
+        }
+
+    }
 
 
     template <class key_type,class value_type>
     class key_value_pair
     {
 
-    private:
+    public:
 
         key_type key;
         value_type value;
     public:
-        key_value_pair(key_type key=1111,value_type value=1111)
+        key_value_pair(key_type keyvf,value_type value)
         {
             this->key=key;
             this->value=value;
@@ -322,9 +348,8 @@ namespace utlis {
         key_type getkey(void) { return key ; }
         value_type getvalue(void) { return  value; }
         void set_key(key_type  set_key)
-        {   key = set_key;
-            //return 0;
-            int xiajibaxiede ;
+        {
+            key = set_key;
         }
 
         void set_value(value_type set_value )
@@ -339,13 +364,16 @@ namespace utlis {
     template <class key_type,class value_type>
     class leaf_node
     {
-    public:
+    private:
+        friend void _split(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr);
         middle_node<key_type,value_type> * parent_node ;//= new middle_node<key_type>;  //父亲节点
-        leaf_node<key_type,value_type> * brother_node ;//= new leaf_node<key_type,value_type>;
+        leaf_node<key_type,value_type>  * brother_node ;//= new leaf_node<key_type,value_type>;
         //vector<int> v = vector<int>(10, 0);
         //vector< key_value_pair<key_type,value_type> >  key_value_pairs  = vector< key_value_pair<key_type,value_type> >(1);
         vector<key_value_pair<key_type,value_type>> key_value_pairs;
         int used_pairs;
+
+
     public:
         leaf_node(middle_node<key_type,value_type> * parent_node ,
                   leaf_node<key_type,value_type> * brother_node = nullptr):parent_node(parent_node),brother_node(brother_node)
@@ -355,20 +383,42 @@ namespace utlis {
             this->brother_node = brother_node;
         };
 
+        key_type pop_key()
+        {
+            typename vector<key_value_pair<key_type,value_type>>::iterator item = key_value_pairs.end()-1;
+            return item->getkey();
+        }
+
+        value_type pop_value()
+        {
+            typename vector<key_value_pair<key_type,value_type>>::iterator item = key_value_pairs.end()-1;
+            return item->getvalue();
+        }
+
+
+
+
+
+
+
+
         int  insert(key_type key ,value_type value)
         {
             if(used_pairs>=10)
             {
                 cout<<"this node has full"<<endl;
-                leaf_node<key_type,value_type>  * new_leaf_node = new leaf_node<key_type,value_type>(parent_node);
-                //for(vector<key_value_pair<key_type,value_type>>::iterator item=key_value_pairs.end();
-                //        item!=key_value_pairs.end(); item++)
-                for(int i=0;i<5;i++)
-                {
-                    key_value_pair<key_type,value_type> a = key_value_pairs[i];
-                    cout<<a.getkey()<<"a"<<endl;
-                    //new_leaf_node->key_value_pairs.push_back(this->key_value_pairs.pop_back());
-                }
+
+                //leaf_node<key_type,value_type> *leaf_node1 = new leaf_node<key_type,value_type>(parent_node);
+
+                _split(parent_node,this);               //??????????
+
+                cout<<"node split successful"<<endl;
+
+
+
+
+
+
                 return 0;  //该叶子节点已满,插入失败
             } else
             {
@@ -376,14 +426,20 @@ namespace utlis {
                 key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
                 key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的vector 中
                 used_pairs++;                       //当前已使用的pair加1
+                _sort();
                 return  1 ;  //insert successed
             }
         };
 
 
 
-        int delete_pair(key_type key)
+        int delete_pair(key_type key= nullptr)
         {
+            if(key== nullptr)
+            {
+                key_value_pairs.pop_back();
+                return 1;
+            }
             typename vector< key_value_pair<key_type,value_type> >::iterator iter= key_value_pairs.begin();
             while(iter!=key_value_pairs.end())
             {
@@ -427,15 +483,13 @@ namespace utlis {
         }
 
 
-
-
+        //friend void _split(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr);
         friend bool operator< (key_value_pair<key_type,value_type> &s1 ,  key_value_pair<key_type,value_type> &s2);
 
 
 
-
-
     };
+
 
 
     template <typename key_type,typename value_type>   //叶节点内的sort函数
