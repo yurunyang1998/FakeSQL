@@ -160,6 +160,7 @@ namespace  utlis {
 
                         if(point->flag==2){
                             point->leaf_node_point->insert(key,value);
+                            point->middle_node_point->updatekey();
                             return 1;
                         }
                         //if(point)

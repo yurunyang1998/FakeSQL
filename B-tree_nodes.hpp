@@ -94,7 +94,7 @@ namespace utlis {
         key_type key;
         //middle_node_t * value  ;
 
-        leaf_node<key_type,int>   * value;
+        leaf_node<key_type,value_type>   * value;
 
     public:
 
@@ -122,7 +122,7 @@ namespace utlis {
 
         void update_key()
         {
-
+            key = value->get_key();
         }
 
 
@@ -157,11 +157,23 @@ namespace utlis {
         key_type updatekey()
         {
             if(flag==1) {
+
+                typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item1 =
+                        key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.begin();
+
+                while (item1!=key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end())
+                {
+                    item1->update_key();
+                    item1++;
+                }
+
+
                 typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
                         key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end() - 1;
                 this->Maxkey = item->key;
                 return Maxkey;
             } else{
+
                 typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.end()-1;
                 this->Maxkey = item->key;
                 return Maxkey;
@@ -345,6 +357,7 @@ namespace utlis {
     class leaf_node
     {
     private:
+        key_type Max_key;
         //friend void _split(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr);
         middle_node<key_type,value_type> * parent_node ;//= new middle_node<key_type>;  //父亲节点
         leaf_node<key_type,value_type>  * brother_node ;//= new leaf_node<key_type,value_type>;
@@ -359,6 +372,7 @@ namespace utlis {
                   leaf_node<key_type,value_type> * brother_node = nullptr):parent_node(parent_node),brother_node(brother_node)
         {
             used_pairs=0;
+            Max_key =0;
             this->parent_node = parent_node;
             this->brother_node = brother_node;
         };
@@ -375,7 +389,10 @@ namespace utlis {
             return item->getvalue();
         }
 
-
+        key_type updateMaxkey()
+        {
+            return Max_key;
+        }
 
         template <key_type,value_type>
         friend void _split(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr);
@@ -408,6 +425,7 @@ namespace utlis {
                 key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的vector 中
                 used_pairs++;                       //当前已使用的pair加1
                 _sort();
+                Max_key = (key_value_pairs.end()-1)->key;
                 return  1 ;  //insert successed
             }
         };
