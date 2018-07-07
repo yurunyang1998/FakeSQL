@@ -103,7 +103,8 @@ namespace utlis {
                 (key_type key=nullptr, leaf_node<key_type,int> * value= nullptr):
                 key(key),value(value)
         {
-
+            //update_key();
+            //cout<<"updatekey successful"<<endl;
         }
 
 
@@ -122,7 +123,8 @@ namespace utlis {
 
         void update_key()
         {
-            key = value->get_key();
+            key = value->get_key()+5;
+            //cout<<key<<endl;
         }
 
 
@@ -167,7 +169,7 @@ namespace utlis {
                     item1++;
                 }
 
-
+                sort();
                 typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
                         key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end() - 1;
                 this->Maxkey = item->key;
@@ -409,15 +411,21 @@ namespace utlis {
                 //leaf_node<key_type,value_type> *leaf_node1 = new leaf_node<key_type,value_type>(parent_node);
 
                 _split(key,value,parent_node,this);               //??????????
+                parent_node->updatekey();
 
-                //cout<<"node split successful"<<endl;
-
-
-
+                cout<<"node split successful"<<endl;
 
 
+                key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
+                key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的vector 中
+                used_pairs++;                       //当前已使用的pair加1
+                _sort();
+                Max_key = (key_value_pairs.end()-1)->key;
+                return  1 ;  //insert successed
 
-                return 0;  //该叶子节点已满,插入失败
+
+
+                //return 0;  //该叶子节点已满,插入失败
             } else
             {
                 //cout<<key<<endl;
@@ -430,6 +438,11 @@ namespace utlis {
             }
         };
 
+
+        middle_node<key_type,value_type> * get_parent_node()
+        {
+            return  parent_node;
+        };
 
 
         int delete_pair(key_type key= NULL)
@@ -457,7 +470,7 @@ namespace utlis {
 
         key_type get_key()
         {
-            return 0;
+            return  (key_value_pairs.end()-1)->getkey();
         }
 
 
@@ -504,7 +517,7 @@ namespace utlis {
         } else{
             leaf_node<key_type,value_type> * new_leaf_node = new leaf_node<key_type,value_type>(parent_node);
             //parent_node->insert()
-            new_leaf_node->insert(key,value);
+            //new_leaf_node->insert(key,value);
             for(int i=0;i<5;i++)
             {
                 new_leaf_node->insert(leaf_node1->pop_key(),leaf_node1->pop_value());

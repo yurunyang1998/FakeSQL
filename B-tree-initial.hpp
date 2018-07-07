@@ -143,7 +143,7 @@ namespace  utlis {
                         leaf_node<key_type,value_type> * leaf_node1 = new leaf_node<key_type,value_type>(temp_middle_node);
                         leaf_node1->insert(key,value);
                         temp_middle_node->insert(key,leaf_node1);
-                        temp_middle_node->updatekey();
+                        //temp_middle_node->updatekey();
                         return 1;
                     }
                 } else   //找到了相关节点
@@ -160,7 +160,8 @@ namespace  utlis {
 
                         if(point->flag==2){
                             point->leaf_node_point->insert(key,value);
-                            point->middle_node_point->updatekey();
+
+                            point->leaf_node_point->get_parent_node()->updatekey();
                             return 1;
                         }
                         //if(point)
