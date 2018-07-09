@@ -161,7 +161,7 @@ namespace  utlis {
                         if(point->flag==2){
                             point->leaf_node_point->insert(key,value);
 
-                            point->leaf_node_point->get_parent_node()->updatekey();
+                            //point->leaf_node_point->get_parent_node()->updatekey();
                             return 1;
                         }
                         //if(point)
