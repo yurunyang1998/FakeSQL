@@ -5,7 +5,7 @@
 #ifndef B_TREE_NODES_HPP
 #define B_TREE_NODES_HPP
 
-#include <vector>
+#include <deque>
 #include <algorithm>
 #include "iostream"
 #include "string"
@@ -123,7 +123,7 @@ namespace utlis {
 
         void update_key()
         {
-            key = value->get_key()+5;
+            key = value->get_key();
             //cout<<key<<endl;
         }
 
@@ -145,11 +145,11 @@ namespace utlis {
         int flag =-1;
         int used_pairs =0;
         key_type Maxkey;
-        vector< key_value_pair_for_middle_node<key_type,value_type> >   key_value_pair_for_middle_node_t ;
-        vector< key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >
+        deque< key_value_pair_for_middle_node<key_type,value_type> >   key_value_pair_for_middle_node_t ;
+        deque< key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >
                 key_value_pair_for_middle_node_which_next_node_is_leaf_node_t ;
 
-        //vector< key_value_pair_for_middle_node<key_type> > ;
+        //deque< key_value_pair_for_middle_node<key_type> > ;
     public:
         middle_node(middle_node_t  * _parent_node = nullptr)
         : parent_node(_parent_node)
@@ -160,23 +160,23 @@ namespace utlis {
         {
             if(flag==1) {
 
-                typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item1 =
+                typename deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item1 =
                         key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.begin();
 
-                while (item1!=key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end())
+                while (item1!=key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end()-2)
                 {
                     item1->update_key();
                     item1++;
                 }
 
                 sort();
-                typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
+                typename deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
                         key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end() - 1;
                 this->Maxkey = item->key;
                 return Maxkey;
             } else{
 
-                typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.end()-1;
+                typename deque< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.end()-2;
                 this->Maxkey = item->key;
                 return Maxkey;
             }
@@ -197,7 +197,7 @@ namespace utlis {
             if(flag ==0)
             {
 
-                typename vector< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item
+                typename deque< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item
                         =key_value_pair_for_middle_node_t.begin();
 
                 while(item != key_value_pair_for_middle_node_t.end())
@@ -220,7 +220,7 @@ namespace utlis {
             } else
             {
 
-                typename vector<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >::iterator item
+                typename deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> >::iterator item
                         = key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.begin();
 
                 while(item != key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end())
@@ -363,9 +363,9 @@ namespace utlis {
         //friend void _split(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr);
         middle_node<key_type,value_type> * parent_node ;//= new middle_node<key_type>;  //父亲节点
         leaf_node<key_type,value_type>  * brother_node ;//= new leaf_node<key_type,value_type>;
-        //vector<int> v = vector<int>(10, 0);
-        //vector< key_value_pair<key_type,value_type> >  key_value_pairs  = vector< key_value_pair<key_type,value_type> >(1);
-        vector<key_value_pair<key_type,value_type>> key_value_pairs;
+        //deque<int> v = deque<int>(10, 0);
+        //deque< key_value_pair<key_type,value_type> >  key_value_pairs  = deque< key_value_pair<key_type,value_type> >(1);
+        deque<key_value_pair<key_type,value_type>> key_value_pairs;
         int used_pairs;
 
 
@@ -379,15 +379,20 @@ namespace utlis {
             this->brother_node = brother_node;
         };
 
-        key_type pop_key()
+        key_type pop_key(int flag=0)
         {
-            typename vector<key_value_pair<key_type,value_type>>::iterator item = key_value_pairs.end()-1;
-            return item->getkey();
+            if(flag==0) {
+                typename deque<key_value_pair<key_type, value_type>>::iterator item = key_value_pairs.begin();
+                return item->getkey();
+            } else{
+                typename  deque<key_value_pair<key_type,value_type>>:: iterator item = key_value_pairs.end()-1;
+                return item->getkey();
+            }
         }
 
         value_type pop_value()
         {
-            typename vector<key_value_pair<key_type,value_type>>::iterator item = key_value_pairs.end()-1;
+            typename deque<key_value_pair<key_type,value_type>>::iterator item = key_value_pairs.begin();
             return item->getvalue();
         }
 
@@ -417,7 +422,7 @@ namespace utlis {
 
 
                 key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
-                key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的vector 中
+                key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的deque 中
                 used_pairs++;                       //当前已使用的pair加1
                 _sort();
                 Max_key = (key_value_pairs.end()-1)->key;
@@ -430,7 +435,7 @@ namespace utlis {
             {
                 //cout<<key<<endl;
                 key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
-                key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的vector 中
+                key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的deque 中
                 used_pairs++;                       //当前已使用的pair加1
                 _sort();
                 Max_key = (key_value_pairs.end()-1)->key;
@@ -449,11 +454,11 @@ namespace utlis {
         {
             if(key== NULL)
             {
-                key_value_pairs.pop_back();
+                key_value_pairs.pop_front();
                 used_pairs--;
                 return 1;
             }
-            typename vector< key_value_pair<key_type,value_type> >::iterator iter= key_value_pairs.begin();
+            typename deque< key_value_pair<key_type,value_type> >::iterator iter= key_value_pairs.begin();
             while(iter!=key_value_pairs.end())
             {
                 if(iter->getkey()==key)
@@ -482,7 +487,7 @@ namespace utlis {
 
         value_type searchkey(key_type key)
         {
-            typename vector<key_value_pair<key_type,value_type>>::iterator item =  key_value_pairs.begin();
+            typename deque<key_value_pair<key_type,value_type>>::iterator item =  key_value_pairs.begin();
             while(item!=key_value_pairs.end())
             {
                 if(item->getkey() == key)
@@ -522,10 +527,14 @@ namespace utlis {
             {
                 new_leaf_node->insert(leaf_node1->pop_key(),leaf_node1->pop_value());
                 //new_leaf_node->delete_pair();
+//                if(i==5)
+//                {
+//                    parent_node->insert(new_leaf_node->pop_key())
+//                }
                 leaf_node1->delete_pair();
             }
 
-            parent_node->insert(new_leaf_node->pop_key(),new_leaf_node);
+            parent_node->insert(new_leaf_node->pop_key(1),new_leaf_node);
 
 
 
@@ -578,8 +587,8 @@ namespace utlis {
 //public:
 //    middle_node<key_type> * parent_node ;//= new middle_node<key_type>;  //父亲节点
 //    leaf_node<key_type,value_type> * brother_node ;//= new leaf_node<key_type,value_type>;
-//    //vector<int> v = vector<int>(10, 0);
-//    vector< key_value_pair<key_type,value_type> >  key_value_pairs  = vector< key_value_pair<key_type,value_type> >(1);
+//    //deque<int> v = deque<int>(10, 0);
+//    deque< key_value_pair<key_type,value_type> >  key_value_pairs  = deque< key_value_pair<key_type,value_type> >(1);
 //    int used_pairs;
 //public:
 //    leaf_node(middle_node<key_type> * parent_node= nullptr,
@@ -599,7 +608,7 @@ namespace utlis {
 //        } else
 //        {
 //            key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
-//            key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的vector 中
+//            key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的deque 中
 //            used_pairs++;                       //当前已使用的pair加1
 //            return  1 ;  //insert successed
 //        }
@@ -609,7 +618,7 @@ namespace utlis {
 //
 //    int delete_pair(key_type key)
 //    {
-//        typename vector< key_value_pair<key_type,value_type> >::iterator iter= key_value_pairs.begin();
+//        typename deque< key_value_pair<key_type,value_type> >::iterator iter= key_value_pairs.begin();
 //        while(iter!=key_value_pairs.end())
 //        {
 //            if(iter->getkey()==key)
