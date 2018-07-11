@@ -126,6 +126,9 @@ namespace  utlis {
                     if (temp_root->user_paires() >= 10) {
                         //split_node
                         cout<<"this node has full2"<<key<<endl;
+                        ///////////////////
+                        ///////////////////
+                        ///////////////////
                         break;
                     } else
                     {
