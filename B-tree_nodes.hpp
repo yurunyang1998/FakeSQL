@@ -315,6 +315,7 @@ namespace utlis {
             return parent_node;
         }
 
+        //这里也要看
         int insert(key_type key , middle_node<key_type,value_type> * value)
         {
             if(flag==1 )
@@ -341,7 +342,7 @@ namespace utlis {
             if(used_pairs>=10)
             {
                 cout<<"middle node has full"<<endl;
-                _split_middle_node(this->parent_node,value);
+                _split_middle_node(this,value);
                 //sort();
 
 
@@ -620,8 +621,9 @@ namespace utlis {
             middle_node1->delete_pair();
         }
 
-        (middle_node1->getParent_node())->insert(new_middle_node->get_key(1),leaf_node1);
-
+        //看这里
+        (middle_node1->getParent_node())->insert(new_middle_node->get_key(1),new_middle_node);
+        //middle_node1->getParent_node()->insert()
     };
 
 
