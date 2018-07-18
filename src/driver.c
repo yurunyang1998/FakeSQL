@@ -11,9 +11,9 @@
 extern int driver(int ac, const char *av[])
 {
     extern FILE *yyin;
-    yydebug = 1;
 
     if(ac > 1 && !strcmp(av[1], "-d")) {
+        yydebug = 1;
         ac--;
         av++;
     }
