@@ -239,8 +239,10 @@ namespace utlis {
             if (flag==0)
             {
                 key_value_pair_for_middle_node_t.pop_front();
+                used_pairs--;
             } else{
                 key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.pop_front();
+                used_pairs--;
             }
 
         }
@@ -341,7 +343,7 @@ namespace utlis {
                 return 1; //子节点不可同时存在既有叶子节点又有中间节点的情况
             if(used_pairs>=10)
             {
-                cout<<"middle node has full"<<endl;
+                //cout<<"middle node has full,the key is "<<key<<endl;
                 _split_middle_node(this,value);
                 //sort();
 
@@ -486,14 +488,14 @@ namespace utlis {
             if(used_pairs>=10)
             {
 
-                cout<<"this node has full"<<endl;
+               // cout<<"this node has full,the key is "<<key<<endl;
 
                 //leaf_node<key_type,value_type> *leaf_node1 = new leaf_node<key_type,value_type>(parent_node);
 
                 _split_leaf_node(parent_node,this);               //??????????
                 parent_node->updatekey();
 
-                cout<<"node split successful"<<endl;
+                //cout<<"node split successful"<<endl;
 
 
                 key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
