@@ -17,10 +17,6 @@ int main() {
         manager.data_search(i);
 
 
-    int i;
-
-    //int a;
-
     return 0;
 
 }

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include "iostream"
 #include "string"
+#include <cassert>
 
 
 using namespace std;
@@ -56,7 +57,7 @@ namespace utlis {
 
 
     public:
-        key_value_pair_for_middle_node(key_type key=nullptr, middle_node_t * value= nullptr):
+        key_value_pair_for_middle_node(key_type key=NULL, middle_node_t * value = NULL):
                 key(key),value(value)
         {
 //            this->key=key;
@@ -100,7 +101,7 @@ namespace utlis {
 
 
         key_value_pair_for_middle_node_which_next_node_is_leaf_node
-                (key_type key=nullptr, leaf_node<key_type,int> * value= nullptr):
+                (key_type key = NULL, leaf_node<key_type,int> * value = NULL):
                 key(key),value(value)
         {
             //update_key();
@@ -381,9 +382,11 @@ namespace utlis {
 
         }
 
+        template<key_type, value_type>
         friend bool operator< ( key_value_pair_for_middle_node<key_type,value_type> &s1, key_value_pair_for_middle_node<key_type,value_type> &s2);
 
                              //下一个节点是叶子节点的中间节点的用于sort的友元函数
+        template<key_type, value_type>
         friend bool operator< (key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> &s1,
                         key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type> &s2);
 
@@ -482,7 +485,6 @@ namespace utlis {
         friend void _split_leaf_node(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1);
 
 
-
         int  insert(key_type key ,value_type value)
         {
             if(used_pairs>=10)
@@ -527,9 +529,9 @@ namespace utlis {
         };
 
 
-        int delete_pair(key_type key= NULL)
+        int delete_pair(key_type key = 0)
         {
-            if(key== NULL)
+            if(key == 0)
             {
                 key_value_pairs.pop_front();
                 used_pairs--;
@@ -579,6 +581,7 @@ namespace utlis {
 
 
         //friend void _split(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr);
+        template<key_type, value_type>
         friend bool operator< (key_value_pair<key_type,value_type> &s1 ,  key_value_pair<key_type,value_type> &s2);
 
 
@@ -656,7 +659,7 @@ namespace utlis {
 
 
 
-}
+}   // end of namespace utils
 
 
 
