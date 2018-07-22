@@ -183,6 +183,70 @@ namespace utlis {
 
         }
 
+        key_type get_key(int front_or_back=0)    //这个参数表示要取的是front还是back
+        {
+            if(flag==1)
+            {
+                if(front_or_back==0)
+                {
+                    typename deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
+                            key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.begin();
+                    return item->getkey();
+                }
+                if(front_or_back==1)
+                {
+                    typename deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
+                            key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end()-1;
+                    return item->getkey();
+                }
+
+            }
+            if(flag==0)
+            {
+                if(front_or_back==0)
+                {
+                    typename deque< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.begin();
+                    return item->getkey();
+                }
+                if(front_or_back==1)
+                {
+                    typename deque< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.end()-1;
+                    return item->getkey();
+                }
+
+            }
+        }
+
+
+        middle_node_t * get_value_of_middle_node()
+        {
+            typename deque< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.begin();
+            return item->getvalue();
+        }
+
+
+        leaf_node<key_type,value_type> * get_value_of_leaf_node()
+        {
+            typename  deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type>>::iterator iter
+                    = key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.begin();
+
+            return iter->getvalue();
+        };
+
+
+        void delete_pair()
+        {
+            if (flag==0)
+            {
+                key_value_pair_for_middle_node_t.pop_front();
+                used_pairs--;
+            } else{
+                key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.pop_front();
+                used_pairs--;
+            }
+
+        }
+
 
 
         int user_paires()
@@ -253,7 +317,8 @@ namespace utlis {
             return parent_node;
         }
 
-        int insert(key_type key , middle_node_t * value)
+        //这里也要看
+        int insert(key_type key , middle_node<key_type,value_type> * value)
         {
             if(flag==1 )
                 return 1; //子节点不可同时存在既有叶子节点又有中间节点的情况
@@ -267,13 +332,25 @@ namespace utlis {
             return 0;
         }
 
+        template <key_type,value_type>
+        friend void _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1);
+
+
         int insert(key_type key , leaf_node<key_type,value_type> * value)
         {
 
             if(flag==0)
                 return 1; //子节点不可同时存在既有叶子节点又有中间节点的情况
-            if(used_pairs>10)
-                return -1;
+            if(used_pairs>=10)
+            {
+                //cout<<"middle node has full,the key is "<<key<<endl;
+                _split_middle_node(this,value);
+                //sort();
+
+
+                //return 1;
+            }
+
 
 //            if(used_pairs==0)
 //            {
@@ -402,7 +479,7 @@ namespace utlis {
         }
 
         template <key_type,value_type>
-        friend void _split(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr);
+        friend void _split_leaf_node(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1);
 
 
 
@@ -411,14 +488,14 @@ namespace utlis {
             if(used_pairs>=10)
             {
 
-                cout<<"this node has full"<<endl;
+               // cout<<"this node has full,the key is "<<key<<endl;
 
                 //leaf_node<key_type,value_type> *leaf_node1 = new leaf_node<key_type,value_type>(parent_node);
 
-                _split(key,value,parent_node,this);               //??????????
+                _split_leaf_node(parent_node,this);               //??????????
                 parent_node->updatekey();
 
-                cout<<"node split successful"<<endl;
+                //cout<<"node split successful"<<endl;
 
 
                 key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
@@ -508,18 +585,14 @@ namespace utlis {
 
     };
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////下面是公用的友元函数//////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template <class key_type,class value_type>
-    void _split(key_type key,value_type value , middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1=nullptr)
+    void _split_leaf_node(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1)
     {
-        if(leaf_node1== nullptr)
-        {
 
-
-
-
-
-        } else{
             leaf_node<key_type,value_type> * new_leaf_node = new leaf_node<key_type,value_type>(parent_node);
             //parent_node->insert()
             //new_leaf_node->insert(key,value);
@@ -537,10 +610,23 @@ namespace utlis {
             parent_node->insert(new_leaf_node->pop_key(1),new_leaf_node);
 
 
+    }
 
+
+    template<class key_type,class value_type>
+    void _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1)
+    {
+        middle_node<key_type,value_type> * new_middle_node = new middle_node<key_type,value_type>(middle_node1->getParent_node());
+        for (int i=0;i<5;i++)
+        {
+            new_middle_node->insert(middle_node1->get_key(),middle_node1->get_value_of_leaf_node());
+            middle_node1->delete_pair();
         }
 
-    }
+        //看这里
+        (middle_node1->getParent_node())->insert(new_middle_node->get_key(1),new_middle_node);
+        //middle_node1->getParent_node()->insert()
+    };
 
 
     template <typename key_type,typename value_type>   //叶节点内的sort函数

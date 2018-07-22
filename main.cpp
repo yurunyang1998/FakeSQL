@@ -10,12 +10,15 @@ int main() {
     Manager<int,int> manager(50);
 
     //double a[25]={12,32,43,13,54,23,23,43,53,54,67,6,75,23,78,14,54,32,23,47,27,36,27,26,16};
-    for (int i=0;i<80;i++)
+    for(int i=0;i<200;i++)
         manager.insert_data(i,i);
 
-    int i;
-    for(int i =0;i<80;i++)
+    for(int i=0;i<200;i++)
         manager.data_search(i);
+
+
+    int i;
+
     //int a;
 
     return 0;
