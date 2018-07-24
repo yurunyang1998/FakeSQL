@@ -59,8 +59,8 @@ namespace  utlis {
             //root->insert(key+100,child_2);
 
 
-            root->insert(key+10000,child_2);
-            child_2->insert(key+10000,leaf_node2);
+            root->insert(key+1000000,child_2);
+            child_2->insert(key+1000000,leaf_node2);
             //leaf_node1->insert(12,321);
 
             whether_initialed =1;
