@@ -23,9 +23,21 @@ namespace  utlis {
     public:
         Manager(key_type key) {
             root = initial_B_tree(key);
+            root->set_manager(this);
+        }
+
+        void update_root(middle_node<key_type,value_type> * newroot)
+        {
+            this->root=newroot;
+            newroot->set_manager(this);
+            maxdeepth++;
         }
 
 
+        void updata()
+        {
+            root->updatekey();
+        }
 
 
         middle_node <key_type, value_type> * initial_B_tree(key_type key)
@@ -47,8 +59,8 @@ namespace  utlis {
             //root->insert(key+100,child_2);
 
 
-            root->insert(key+1000,child_2);
-            child_2->insert(key+1000,leaf_node2);
+            root->insert(key+1000000,child_2);
+            child_2->insert(key+1000000,leaf_node2);
             //leaf_node1->insert(12,321);
 
             whether_initialed =1;
