@@ -9,7 +9,9 @@
 #include <algorithm>
 #include "iostream"
 #include "string"
+#include "B-tree-initial.hpp"
 #include <cassert>
+
 
 
 using namespace std;
@@ -17,6 +19,8 @@ namespace utlis {
 
 
 
+    template<class key_type, class value_type>
+    class Manager;
 
     template <class key_type,class value_type>
     class key_value_pair_for_middle_node;
@@ -143,6 +147,7 @@ namespace utlis {
 
         //middle_node<key_type> * parent_node = new middle_node<key_type>;
         middle_node_t * parent_node;
+        utlis::Manager<key_type,value_type> * manager = nullptr;
         int flag =-1;
         int used_pairs =0;
         key_type Maxkey;
@@ -156,6 +161,17 @@ namespace utlis {
         : parent_node(_parent_node)
         {
         }
+
+        void set_manager(Manager<key_type,value_type> *manager)
+        {
+            this->manager = manager;
+        }
+
+        void set_parent_node(middle_node<key_type,value_type> * parent_node)
+        {
+            this->parent_node = parent_node;
+        }
+
 
         key_type updatekey()
         {
@@ -177,7 +193,7 @@ namespace utlis {
                 return Maxkey;
             } else{
 
-                typename deque< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.end()-2;
+                typename deque< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.end()-1;
                 this->Maxkey = item->key;
                 return Maxkey;
             }
@@ -315,6 +331,17 @@ namespace utlis {
 
         middle_node_t  *  getParent_node()
         {
+            if(this->parent_node==NULL)
+            {
+                middle_node<key_type,value_type> * new_root = new middle_node<key_type,value_type>;
+                this->updatekey();
+                new_root->insert(this->get_key(1),this);
+                this->set_parent_node(new_root);
+                (this->manager)->update_root(new_root);
+                cout<<"parent_node has set"<<endl;
+
+
+            }
             return parent_node;
         }
 
@@ -323,8 +350,10 @@ namespace utlis {
         {
             if(flag==1 )
                 return 1; //子节点不可同时存在既有叶子节点又有中间节点的情况
-            if(used_pairs>10)
-                return -1;
+            if(used_pairs>=10)
+            {
+                _split_middle_node(this);//,value);
+            }
             key_value_pair_for_middle_node_t.push_back( key_value_pair_for_middle_node <key_type,value_type>(key,value));
             flag = 0;
             //this->key=key;
@@ -352,12 +381,6 @@ namespace utlis {
                 //return 1;
             }
 
-
-//            if(used_pairs==0)
-//            {
-//                key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.
-//            }
-//
 
             key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.push_back
                     ( key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type>(key,value));
@@ -476,10 +499,10 @@ namespace utlis {
             return item->getvalue();
         }
 
-        key_type updateMaxkey()
-        {
-            return Max_key;
-        }
+//        key_type updateMaxkey()
+//        {
+//            return Max_key;
+//        }
 
         template <key_type,value_type>
         friend void _split_leaf_node(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1);
@@ -619,6 +642,8 @@ namespace utlis {
     template<class key_type,class value_type>
     void _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1)
     {
+
+
         middle_node<key_type,value_type> * new_middle_node = new middle_node<key_type,value_type>(middle_node1->getParent_node());
         for (int i=0;i<5;i++)
         {
@@ -627,9 +652,34 @@ namespace utlis {
         }
 
         //看这里
+
+
         (middle_node1->getParent_node())->insert(new_middle_node->get_key(1),new_middle_node);
-        //middle_node1->getParent_node()->insert()
+        int a ;
     };
+
+
+    template  <class key_type,class value_type>
+    void _split_middle_node(middle_node<key_type,value_type> * middle_node1) // ,middle_node<key_type,value_type> * middle_node_need_to_be_inserted)
+    {
+
+        middle_node<key_type,value_type> * new_middle_node = new middle_node<key_type,value_type>;
+        for(int i=0;i<5;i++)
+        {
+            new_middle_node->insert(middle_node1->get_key(),middle_node1->get_value_of_middle_node());
+            middle_node1->delete_pair();
+        }
+
+//        middle_node<key_type,value_type> *parentttt =  middle_node1->getParent_node();
+//        parentttt->insert(new_middle_node->get_key(1),new_middle_node);
+//        int a;
+
+          middle_node1->getParent_node()->insert(new_middle_node->get_key(1),new_middle_node);
+    };
+
+
+
+
 
 
     template <typename key_type,typename value_type>   //叶节点内的sort函数
