@@ -83,6 +83,15 @@ namespace utlis {
         {
             value = set_value;
         }
+
+
+        value_type update_key()
+        {
+            value_type maxvalue ;
+            maxvalue =  value->updatekey();
+            //cout<<key<<endl;
+        }
+
     };
 
 
@@ -173,31 +182,68 @@ namespace utlis {
         }
 
 
-        key_type updatekey()
-        {
-            if(flag==1) {
+        key_type updatekey() {
+            if (flag == 1) {
 
                 typename deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item1 =
                         key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.begin();
 
-                while (item1!=key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end()-2)
-                {
+                while (item1 != key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end() - 1) {
                     item1->update_key();
                     item1++;
                 }
 
                 sort();
-                typename deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
-                        key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end() - 1;
-                this->Maxkey = item->key;
-                return Maxkey;
-            } else{
 
-                typename deque< key_value_pair_for_middle_node<key_type,value_type> > ::iterator item =key_value_pair_for_middle_node_t.end()-1;
-                this->Maxkey = item->key;
-                return Maxkey;
+                int stl_size = key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.size();
+
+                if (stl_size > 0) {
+                    typename deque<key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type, value_type> >::iterator item =
+                            key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end() - 1;
+
+                    //cout << item->key << "Maxkey" << endl;
+
+                    this->Maxkey = item->key;
+                    return Maxkey;
+
+                } else
+                {
+                    this->Maxkey= -2147483648;
+                    return -2147483648;
+                }
+
+            } else {
+
+
+                typename deque<key_value_pair_for_middle_node<key_type, value_type>>::iterator item1 = key_value_pair_for_middle_node_t.begin();
+
+                while (item1 != key_value_pair_for_middle_node_t.end()) {
+                    Maxkey = item1->update_key();
+                    item1++;
+                }
+
+
+                int stl_size = key_value_pair_for_middle_node_t.size();
+
+                //cout<< stl_size <<"   stl_size "<<endl;
+
+                if (stl_size > 0) {
+                    typename deque<key_value_pair_for_middle_node<key_type, value_type> >::iterator item =
+                            key_value_pair_for_middle_node_t.end() - 1;
+                    //cout << item->key << "Maxkey" << endl;
+                    this->Maxkey = item->key;
+
+                    //cout<< item->key<<"Maxkey"<<endl;
+
+                    return Maxkey;
+
+                } else
+                {
+                    cout <<"else"<<endl;
+                    return -2147483648;
+                }
+
             }
-
         }
 
         key_type get_key(int front_or_back=0)    //这个参数表示要取的是front还是back
@@ -358,6 +404,7 @@ namespace utlis {
             flag = 0;
             //this->key=key;
             this->used_pairs+=1;
+            this->updatekey();
             sort();
             return 0;
         }
@@ -388,6 +435,7 @@ namespace utlis {
             //this->key= key;
             this->used_pairs+=1;
             sort();
+            this->updatekey();
             return 0;
         }
 
@@ -523,12 +571,12 @@ namespace utlis {
                 //cout<<"node split successful"<<endl;
 
 
-                key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
-                key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的deque 中
-                used_pairs++;                       //当前已使用的pair加1
+//                key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
+//                key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的deque 中
+//                used_pairs++;                       //当前已使用的pair加1
                 _sort();
                 Max_key = (key_value_pairs.end()-1)->key;
-                return  1 ;  //insert successed
+                return  -1 ;  //insert successed
 
 
 
