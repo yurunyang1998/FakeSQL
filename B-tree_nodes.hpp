@@ -421,22 +421,21 @@ namespace utlis {
             if(used_pairs>=10)
             {
                 //cout<<"middle node has full,the key is "<<key<<endl;
-                _split_middle_node(this,value);
+                = _split_middle_node(this,value);
                 //sort();
-
-
-                //return 1;
+                //return -1;
             }
+            ////////////////
+            ///////////////下面的可能要剪掉
 
-
-            key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.push_back
-                    ( key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type>(key,value));
+            //key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.push_back
+              //      ( key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type>(key,value));
             flag =1;
             //this->key= key;
             this->used_pairs+=1;
             sort();
             this->updatekey();
-            return 0;
+            return 1;
         }
 
 
@@ -567,13 +566,6 @@ namespace utlis {
 
                 _split_leaf_node(parent_node,this);               //??????????
                 parent_node->updatekey();
-
-                //cout<<"node split successful"<<endl;
-
-
-//                key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
-//                key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的deque 中
-//                used_pairs++;                       //当前已使用的pair加1
                 _sort();
                 Max_key = (key_value_pairs.end()-1)->key;
                 return  -1 ;  //insert successed
@@ -688,7 +680,7 @@ namespace utlis {
 
 
     template<class key_type,class value_type>
-    void _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1)
+    void  _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1)
     {
 
 
@@ -700,10 +692,23 @@ namespace utlis {
         }
 
         //看这里
+        ////////////
+//        int size = new_middle_node->get_key(1);
+//        cout<<size<<":size"<<endl;
+//        int leaf_node1_size = leaf_node1->get_key();
+//        if(size>=leaf_node1->get_key())
+//        {
+//            new_middle_node->insert(leaf_node1_size,leaf_node1);
+//        } else
+//        {
+//            middle_node1->insert(leaf_node1_size,leaf_node1);
+//        }
+
+            /////////////
+
 
 
         (middle_node1->getParent_node())->insert(new_middle_node->get_key(1),new_middle_node);
-        int a ;
     };
 
 
