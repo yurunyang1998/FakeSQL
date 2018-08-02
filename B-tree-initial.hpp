@@ -59,9 +59,9 @@ namespace  utlis {
             //root->insert(key+100,child_2);
 
 
-            root->insert(key+1000000,child_2);
-            child_2->insert(key+1000000,leaf_node2);
-            //leaf_node1->insert(12,321);
+            root->insert(2147483647,child_2);
+            child_2->insert(2147483647,leaf_node2);
+            leaf_node1->insert(key,key);
 
             whether_initialed =1;
             maxdeepth =3;
@@ -159,7 +159,7 @@ namespace  utlis {
                         leaf_node<key_type,value_type> * leaf_node1 = new leaf_node<key_type,value_type>(temp_middle_node);
                         leaf_node1->insert(key,value);
                         temp_middle_node->insert(key,leaf_node1);
-                        //temp_middle_node->updatekey();
+                        temp_middle_node->updatekey();
                         return 1;
                     }
                 } else   //找到了相关节点
@@ -175,10 +175,16 @@ namespace  utlis {
 //                        }
 
                         if(point->flag==2){
-                            point->leaf_node_point->insert(key,value);
+                            int whether_insert_succeed = 0;
+
+                            whether_insert_succeed =  point->leaf_node_point->insert(key,value);
+                            if(whether_insert_succeed == -1)
+                                insert_data(key,value);
+                            else
+                                return 1;
 
                             //point->leaf_node_point->get_parent_node()->updatekey();
-                            return 1;
+                            //return 1;
                         }
                         //if(point)
                 }
