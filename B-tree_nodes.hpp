@@ -410,7 +410,7 @@ namespace utlis {
         }
 
         template <key_type,value_type>
-        friend void _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1);
+        friend  middle_node<key_type,value_type> * new_middle_node  _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1);
 
 
         int insert(key_type key , leaf_node<key_type,value_type> * value)
@@ -421,7 +421,8 @@ namespace utlis {
             if(used_pairs>=10)
             {
                 //cout<<"middle node has full,the key is "<<key<<endl;
-                = _split_middle_node(this,value);
+
+                 _split_middle_node(this,value);
                 //sort();
                 //return -1;
             }
@@ -656,7 +657,7 @@ namespace utlis {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template <class key_type,class value_type>
-    void _split_leaf_node(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1)
+    void  _split_leaf_node(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1)
     {
 
             leaf_node<key_type,value_type> * new_leaf_node = new leaf_node<key_type,value_type>(parent_node);
@@ -680,7 +681,7 @@ namespace utlis {
 
 
     template<class key_type,class value_type>
-    void  _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1)
+    middle_node<key_type,value_type> * new_middle_node _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1)
     {
 
 
@@ -709,11 +710,12 @@ namespace utlis {
 
 
         (middle_node1->getParent_node())->insert(new_middle_node->get_key(1),new_middle_node);
+        return new_middle_node;
     };
 
 
     template  <class key_type,class value_type>
-    void _split_middle_node(middle_node<key_type,value_type> * middle_node1) // ,middle_node<key_type,value_type> * middle_node_need_to_be_inserted)
+    void  _split_middle_node(middle_node<key_type,value_type> * middle_node1) // ,middle_node<key_type,value_type> * middle_node_need_to_be_inserted)
     {
 
         middle_node<key_type,value_type> * new_middle_node = new middle_node<key_type,value_type>;
