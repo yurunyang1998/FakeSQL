@@ -10,43 +10,13 @@
 #include "iostream"
 #include "string"
 #include "B-tree-initial.hpp"
-#include <cassert>
+#include "B-tree-initial.hpp"
+#include "pub_friends.hpp"          // emmmm...名字有点gay gay的味道...
 
 
 
 using namespace std;
-namespace utlis {
-
-
-
-    template<class key_type, class value_type>
-    class Manager;
-
-    template <class key_type,class value_type>
-    class key_value_pair_for_middle_node;
-
-    template <class key_type,class value_type>
-    class leaf_node;
-
-    template <class key_type,class value_type>
-    class key_value_pair_for_middle_node_which_next_node_is_leaf_node;
-
-    template <class key_type,class value_type>
-    class middle_node;
-
-
-    template <class key_type,class value_type>
-    class key_value_pair;
-
-
-    template <class key_type,class value_type>
-    struct points_struct
-    {
-        int flag = 0;
-        middle_node<key_type,value_type> * middle_node_point;
-        leaf_node<key_type,value_type> * leaf_node_point;
-    };
-
+namespace utils {
 
 
 
@@ -57,7 +27,7 @@ namespace utlis {
     public:
 
         key_type key;
-        middle_node_t * value  ;
+        middle_node_t * value;
 
 
     public:
@@ -67,8 +37,6 @@ namespace utlis {
 //            this->key=key;
 //            this->value=value;
         }
-
-
 
 
         key_type getkey(void) { return key ; }
@@ -156,7 +124,7 @@ namespace utlis {
 
         //middle_node<key_type> * parent_node = new middle_node<key_type>;
         middle_node_t * parent_node;
-        utlis::Manager<key_type,value_type> * manager = nullptr;
+        utils::Manager<key_type,value_type> * manager = nullptr;
         int flag =-1;
         int used_pairs =0;
         key_type Maxkey;
@@ -372,9 +340,6 @@ namespace utlis {
         }
 
 
-
-
-
         middle_node_t  *  getParent_node()
         {
             if(this->parent_node==NULL)
@@ -409,8 +374,6 @@ namespace utlis {
             return 0;
         }
 
-        template <key_type,value_type>
-        friend  middle_node<key_type,value_type> * new_middle_node  _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1);
 
 
         int insert(key_type key , leaf_node<key_type,value_type> * value)
@@ -552,9 +515,6 @@ namespace utlis {
 //            return Max_key;
 //        }
 
-        template <key_type,value_type>
-        friend void _split_leaf_node(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1);
-
 
         int  insert(key_type key ,value_type value)
         {
@@ -681,7 +641,7 @@ namespace utlis {
 
 
     template<class key_type,class value_type>
-    middle_node<key_type,value_type> * new_middle_node _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1)
+    middle_node<key_type,value_type> * _split_middle_node(middle_node<key_type,value_type> * middle_node1,leaf_node<key_type,value_type> * leaf_node1)
     {
 
 
@@ -711,7 +671,7 @@ namespace utlis {
 
         (middle_node1->getParent_node())->insert(new_middle_node->get_key(1),new_middle_node);
         return new_middle_node;
-    };
+    }
 
 
     template  <class key_type,class value_type>
@@ -730,11 +690,7 @@ namespace utlis {
 //        int a;
 
           middle_node1->getParent_node()->insert(new_middle_node->get_key(1),new_middle_node);
-    };
-
-
-
-
+    }
 
 
     template <typename key_type,typename value_type>   //叶节点内的sort函数
@@ -758,17 +714,7 @@ namespace utlis {
     }
 
 
-
-
-
-
-
-
 }   // end of namespace utils
-
-
-
-
 
 
 

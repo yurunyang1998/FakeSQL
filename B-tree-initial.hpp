@@ -8,7 +8,7 @@
 #include "B-tree_nodes.hpp"
 #include "iostream"
 #include "string"
-namespace  utlis {
+namespace  utils {
 
 
     template<class key_type, class value_type>
@@ -28,7 +28,7 @@ namespace  utlis {
 
         void update_root(middle_node<key_type,value_type> * newroot)
         {
-            this->root=newroot;
+            this->root = newroot;
             newroot->set_manager(this);
             maxdeepth++;
         }
@@ -192,25 +192,10 @@ namespace  utlis {
 
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     };
-}
 
 
+}   // end of namespace utils
 
 
-#endif
+#endif      // end of B_TREE_INITIAL_HPP
