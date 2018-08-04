@@ -179,6 +179,7 @@ namespace  utils {
 
                             whether_insert_succeed =  point->leaf_node_point->insert(key,value);
                             if(whether_insert_succeed == -1)
+                               //cout<<"digui"<<endl;
                                 insert_data(key,value);
                             else
                                 return 1;

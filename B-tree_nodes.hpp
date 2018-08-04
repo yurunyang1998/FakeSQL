@@ -207,7 +207,7 @@ namespace utils {
 
                 } else
                 {
-                    cout <<"else"<<endl;
+                    //cout <<"else"<<endl;
                     return -2147483648;
                 }
 
@@ -363,9 +363,26 @@ namespace utils {
                 return 1; //子节点不可同时存在既有叶子节点又有中间节点的情况
             if(used_pairs>=10)
             {
-                _split_middle_node(this);//,value);
+                middle_node<key_type,value_type> * new_middle_node = new middle_node<key_type,value_type>;
+                new_middle_node =  _split_middle_node(this);//,value);
+
+                int new_middle_node_maxkey = new_middle_node->get_key(1);
+                //cout<<size<<":size"<<endl;
+                int leaf_node1_maxkey = value->get_key(1);
+                if(new_middle_node_maxkey>= leaf_node1_maxkey)
+                {
+                    new_middle_node->insert(value->get_key(1),value);
+                    value->set_parent_node(new_middle_node);
+                } else
+                {
+                    this->insert(value->get_key(1),value);
+                    value->set_parent_node(this);
+                }
+
+                return 0;
             }
             key_value_pair_for_middle_node_t.push_back( key_value_pair_for_middle_node <key_type,value_type>(key,value));
+            value->set_parent_node(this);
             flag = 0;
             //this->key=key;
             this->used_pairs+=1;
@@ -381,19 +398,36 @@ namespace utils {
 
             if(flag==0)
                 return 1; //子节点不可同时存在既有叶子节点又有中间节点的情况
+
+            middle_node<key_type,value_type> *new_middle_node = new middle_node<key_type,value_type>;
             if(used_pairs>=10)
             {
                 //cout<<"middle node has full,the key is "<<key<<endl;
 
-                 _split_middle_node(this,value);
+                 new_middle_node =  _split_middle_node(this,value);
                 //sort();
-                //return -1;
+
+                int new_middle_node_maxkey = new_middle_node->get_key(1);
+                //cout<<size<<":size"<<endl;
+                int leaf_node1_maxkey = value->get_key();
+                if(new_middle_node_maxkey>= leaf_node1_maxkey)
+                {
+                    new_middle_node->insert(value->get_key(),value);
+                    value->set_parent(new_middle_node);
+                } else
+                {
+                    this->insert(value->get_key(),value);
+                    value->set_parent(this);
+                }
+
+
+                return 0;
             }
             ////////////////
             ///////////////下面的可能要剪掉
-
-            //key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.push_back
-              //      ( key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type>(key,value));
+            value->set_parent(this);
+            key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.push_back
+                    ( key_value_pair_for_middle_node_which_next_node_is_leaf_node<key_type,value_type>(key,value));
             flag =1;
             //this->key= key;
             this->used_pairs+=1;
@@ -484,7 +518,7 @@ namespace utils {
 
 
     public:
-        leaf_node(middle_node<key_type,value_type> * parent_node ,
+        leaf_node(middle_node<key_type,value_type> * parent_node= nullptr,
                   leaf_node<key_type,value_type> * brother_node = nullptr):parent_node(parent_node),brother_node(brother_node)
         {
             used_pairs=0;
@@ -546,6 +580,11 @@ namespace utils {
             }
         };
 
+        void set_parent(middle_node<key_type,value_type> * parent_node)
+        {
+            this->parent_node = parent_node;
+        }
+
 
         middle_node<key_type,value_type> * get_parent_node()
         {
@@ -570,7 +609,7 @@ namespace utils {
                     iter->set_value(-1);
                     key_value_pairs.erase(iter);
                     used_pairs--;
-                    cout<<"delete";
+                    //cout<<"delete";
                     break;
                 } else iter++;
             }
@@ -620,17 +659,16 @@ namespace utils {
     void  _split_leaf_node(middle_node<key_type,value_type> * parent_node,leaf_node<key_type,value_type> * leaf_node1)
     {
 
-            leaf_node<key_type,value_type> * new_leaf_node = new leaf_node<key_type,value_type>(parent_node);
+            leaf_node<key_type,value_type> * new_leaf_node = new leaf_node<key_type,value_type>();
             //parent_node->insert()
             //new_leaf_node->insert(key,value);
             for(int i=0;i<5;i++)
             {
+
+
+
                 new_leaf_node->insert(leaf_node1->pop_key(),leaf_node1->pop_value());
-                //new_leaf_node->delete_pair();
-//                if(i==5)
-//                {
-//                    parent_node->insert(new_leaf_node->pop_key())
-//                }
+                //cout<<"delete:"<<leaf_node1->pop_key()<<endl;
                 leaf_node1->delete_pair();
             }
 
@@ -645,7 +683,7 @@ namespace utils {
     {
 
 
-        middle_node<key_type,value_type> * new_middle_node = new middle_node<key_type,value_type>(middle_node1->getParent_node());
+        middle_node<key_type,value_type> * new_middle_node = new middle_node<key_type,value_type>();
         for (int i=0;i<5;i++)
         {
             new_middle_node->insert(middle_node1->get_key(),middle_node1->get_value_of_leaf_node());
@@ -675,7 +713,7 @@ namespace utils {
 
 
     template  <class key_type,class value_type>
-    void  _split_middle_node(middle_node<key_type,value_type> * middle_node1) // ,middle_node<key_type,value_type> * middle_node_need_to_be_inserted)
+    middle_node<key_type,value_type> *  _split_middle_node(middle_node<key_type,value_type> * middle_node1) // ,middle_node<key_type,value_type> * middle_node_need_to_be_inserted)
     {
 
         middle_node<key_type,value_type> * new_middle_node = new middle_node<key_type,value_type>;
@@ -690,6 +728,7 @@ namespace utils {
 //        int a;
 
           middle_node1->getParent_node()->insert(new_middle_node->get_key(1),new_middle_node);
+        return  new_middle_node;
     }
 
 
@@ -717,90 +756,6 @@ namespace utils {
 }   // end of namespace utils
 
 
-
-////////////////////////////////////////////////
-////////////////////////////////////////////////
-//叶子节点的拷贝
-//template <class key_type,class value_type>
-//class leaf_node
-//{
-//public:
-//    middle_node<key_type> * parent_node ;//= new middle_node<key_type>;  //父亲节点
-//    leaf_node<key_type,value_type> * brother_node ;//= new leaf_node<key_type,value_type>;
-//    //deque<int> v = deque<int>(10, 0);
-//    deque< key_value_pair<key_type,value_type> >  key_value_pairs  = deque< key_value_pair<key_type,value_type> >(1);
-//    int used_pairs;
-//public:
-//    leaf_node(middle_node<key_type> * parent_node= nullptr,
-//              leaf_node<key_type,value_type> * brother_node = nullptr)//:parent_node(parent_node),brother_node(brother_node)
-//    {
-//        used_pairs=0;
-//        this->parent_node = parent_node;
-//        this->brother_node = brother_node;
-//
-//    };
-//
-//    int  insert(key_type key ,value_type value)
-//    {
-//        if(used_pairs==10)
-//        {
-//            return 0;  //该叶子节点已满,插入失败
-//        } else
-//        {
-//            key_value_pair<key_type,value_type> new_pair(key,value);  //初始化一个新的key_value_pair
-//            key_value_pairs.push_back(new_pair);   //加入到key_value_pairs 的deque 中
-//            used_pairs++;                       //当前已使用的pair加1
-//            return  1 ;  //insert successed
-//        }
-//    };
-//
-//
-//
-//    int delete_pair(key_type key)
-//    {
-//        typename deque< key_value_pair<key_type,value_type> >::iterator iter= key_value_pairs.begin();
-//        while(iter!=key_value_pairs.end())
-//        {
-//            if(iter->getkey()==key)
-//            {
-//                iter->set_key(-1);
-//                iter->set_value(-1);
-//                key_value_pairs.erase(iter);
-//                used_pairs--;
-//                cout<<"delete";
-//                break;
-//            } else iter++;
-//        }
-//    }
-//
-//    key_type get_key()
-//    {
-//        return 0;
-//    }
-//
-//
-//    void _sort()
-//    {
-//        sort(key_value_pairs.begin(),key_value_pairs.end());
-//    }
-//
-//
-//
-//
-//    friend bool operator< (key_value_pair<key_type,value_type> &s1 ,  key_value_pair<key_type,value_type> &s2);
-//
-//
-//
-//
-//
-//};
-//
-//
-//template <typename key_type,typename value_type>   //叶节点内的sort函数
-//bool operator< (key_value_pair<key_type,value_type> &s1 ,  key_value_pair<key_type,value_type> &s2)
-//{
-//    return s1.key<s2.key;
-//}
 
 
 #endif
