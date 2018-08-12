@@ -1,5 +1,7 @@
 %require "3.0.4"
 
+%define api.pure
+%parse-param { struct par_context *pct_p }
 
 %{
 
@@ -7,23 +9,39 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-#include "driver.h"
 
 void emit(char *s, ...);
-void yyerror(char *, ...);
-int yylex();
 
 %}
 %debug
 
+/*
 %union {
     int intval;
     double floatval;
     char *strval;
     int subtok;
 }
+*/
 
-%token <strval> NAME
+%union {
+    struct ast *tree;
+    double floatval;
+    int intval;
+    char *strval;
+    struct symbol *sym;
+    struct symlist *symlist;
+    int subtok;
+}
+
+%{
+#include "scanner.h"
+#include "driver.h"
+#define YYLEX_PARAM pct_p->scaninfo
+%}
+
+
+%token <sym> NAME
 %token <strval> STRING
 %token <intval> INTNUM
 %token <intval> BOOL
@@ -434,14 +452,14 @@ column_list: NAME           { emit("COLUMN %s", $1); free($1); $$ = 1; }
     ;
 
 select_opts:                          { $$ = 0; }
-    | select_opts ALL                 { if($$ & 01) yyerror("duplicate ALL option"); $$ = $1 | 01; }
-    | select_opts DISTINCT            { if($$ & 02) yyerror("duplicate DISTINCT option"); $$ = $1 | 02; }
-    | select_opts DISTINCTROW         { if($$ & 04) yyerror("duplicate DISTINCTROW option"); $$ = $1 | 04; }
-    | select_opts HIGH_PRIORITY       { if($$ & 010) yyerror("duplicate HIGH_PRIORITY option"); $$ = $1 | 010; }
-    | select_opts STRAIGHT_JOIN       { if($$ & 020) yyerror("duplicate STRAIGHT_JOIN option"); $$ = $1 | 020; }
-    | select_opts SQL_SMALL_RESULT    { if($$ & 040) yyerror("duplicate SQL_SMALL_RESULT option"); $$ = $1 | 040; }
-    | select_opts SQL_BIG_RESULT      { if($$ & 0100) yyerror("duplicate SQL_BIG_RESULT option"); $$ = $1 | 0100; }
-    | select_opts SQL_CALC_FOUND_ROWS { if($$ & 0200) yyerror("duplicate SQL_CALC_FOUND_ROWS option"); $$ = $1 | 0200; }
+    | select_opts ALL                 { if($$ & 01) yyerror(pct_p, "duplicate ALL option"); $$ = $1 | 01; }
+    | select_opts DISTINCT            { if($$ & 02) yyerror(pct_p, "duplicate DISTINCT option"); $$ = $1 | 02; }
+    | select_opts DISTINCTROW         { if($$ & 04) yyerror(pct_p, "duplicate DISTINCTROW option"); $$ = $1 | 04; }
+    | select_opts HIGH_PRIORITY       { if($$ & 010) yyerror(pct_p, "duplicate HIGH_PRIORITY option"); $$ = $1 | 010; }
+    | select_opts STRAIGHT_JOIN       { if($$ & 020) yyerror(pct_p, "duplicate STRAIGHT_JOIN option"); $$ = $1 | 020; }
+    | select_opts SQL_SMALL_RESULT    { if($$ & 040) yyerror(pct_p, "duplicate SQL_SMALL_RESULT option"); $$ = $1 | 040; }
+    | select_opts SQL_BIG_RESULT      { if($$ & 0100) yyerror(pct_p, "duplicate SQL_BIG_RESULT option"); $$ = $1 | 0100; }
+    | select_opts SQL_CALC_FOUND_ROWS { if($$ & 0200) yyerror(pct_p, "duplicate SQL_CALC_FOUND_ROWS option"); $$ = $1 | 0200; }
     ;
 
 select_expr_list: select_expr           { $$ = 1; }
@@ -648,13 +666,13 @@ update_opts: /* nil */          { $$ = 0; }
     | insert_opts IGNORE        { $$ = $1 | 010 ; }
     ;
 
-update_asgn_list: NAME COMPARISON expr { if ($2 != 4) yyerror("bad insert assignment to %s", $1);
+update_asgn_list: NAME COMPARISON expr { if ($2 != 4) yyerror(pct_p, "bad insert assignment to %s", $1);
                 emit("ASSIGN %s", $1); free($1); $$ = 1; }
-    | NAME '.' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $1);
+    | NAME '.' NAME COMPARISON expr { if ($4 != 4) yyerror(pct_p, "bad insert assignment to %s", $1);
                 emit("ASSIGN %s.%s", $1, $3); free($1); free($3); $$ = 1; }
-    | update_asgn_list ',' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $3);
+    | update_asgn_list ',' NAME COMPARISON expr { if ($4 != 4) yyerror(pct_p, "bad insert assignment to %s", $3);
                 emit("ASSIGN %s.%s", $3); free($3); $$ = $1 + 1; }
-    | update_asgn_list ',' NAME '.' NAME COMPARISON expr { if ($6 != 4) yyerror("bad insert assignment to %s.$s", $3, $5);
+    | update_asgn_list ',' NAME '.' NAME COMPARISON expr { if ($6 != 4) yyerror(pct_p, "bad insert assignment to %s.$s", $3, $5);
                 emit("ASSIGN %s.%s", $3, $5); free($3); free($5); $$ = 1; }
     ;
 
@@ -669,7 +687,7 @@ create_database_stmt: CREATE DATABASE opt_if_not_exists NAME    { emit("CREATEDA
     ;
 
 opt_if_not_exists:  /* nil */ { $$ = 0; }
-    | IF EXISTS           { if(!$2)yyerror("IF EXISTS doesn't exist"); $$ = $2; }
+    | IF EXISTS           { if(!$2)yyerror(pct_p, "IF EXISTS doesn't exist"); $$ = $2; }
     ;
 
 
@@ -944,15 +962,3 @@ void emit(char *s, ...)
     printf("\n");
 }
 
-void yyerror(char *s, ...)
-{
-    extern int yylineno;
-
-    va_list ap;
-    va_start(ap, s);
-
-    fprintf(stderr, "%d: error: ", yylineno);
-    vfprintf(stderr, s, ap);
-    fprintf(stderr, "\n");
-
-}

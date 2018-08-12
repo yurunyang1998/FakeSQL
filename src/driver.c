@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 extern int driver(int ac, const char *av[])
 {
@@ -32,3 +33,56 @@ extern int driver(int ac, const char *av[])
 }
 
 
+static unsigned sample_hash(char *sym)
+{
+    unsigned int hash = 0;
+    char c;
+
+    while(*sym)
+    {
+        c = *sym;
+        hash = hash * 9 ^ c;
+        sym++;
+    }
+
+    return hash;
+}
+
+
+extern struct symbol *lookup(context_t *context, char *symbol)
+{
+    struct symbol *sp = &(context->symtab)[sample_hash(symbol) % NHASH];
+    int score = NHASH;
+
+    while(--score >= 0) {
+        if(sp->name && !strcmp(sp->name, symbol)) {
+            return sp;
+        }
+
+        if(!sp->name) {
+            sp->name = strdup(symbol);
+            sp->func = NULL;
+            sp->value = 0;
+            sp->syms = NULL;
+
+            return sp;
+        }
+
+        if(++sp >= symtab + NHASH) {
+            sp = symtab;
+        }
+    }
+    yyerror(context, "Symbol table overflow\n");
+    exit(-1);
+}
+
+
+extern void yyerror(context_t *context, char *s, ...)
+{
+    va_list ap;
+    va_start(ap, s);
+
+    fprintf(stderr, "%d: error: ", yyget_lineno(context->scaninfo));
+    vfprintf(stderr, s, ap);
+    fprintf(stderr, "\n");
+}

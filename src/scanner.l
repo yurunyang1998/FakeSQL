@@ -1,18 +1,23 @@
-%option noyywrap yylineno case-insensitive
-/* %option yyclass="base_utils::cmd_scanner" */
+%option noyywrap yylineno case-insensitive reentrant bison-bridge
+%option header-file="scanner.h"
 
 %{
 #include <stdarg.h>
 #include <string.h>
 #include "parser.h"
+#include "driver.h"
 
 int oldstate;
-void yyerror(char *, ...);
 
 %}
 
 %x COMMENT
 %s BTWMODE
+
+%{
+struct par_context *pct_p = yyextra;
+%}
+
 
 %%
 
@@ -285,8 +290,8 @@ FALSE	{ yylval.intval = 0; return BOOL; }
 '(\\.|''|[^'\n])*'	|
 \"(\\.|\"\"|[^"\n])*\"  { yylval.strval = strdup(yytext); return STRING; }
 
-'(\\.|[^'\n])*$	        { yyerror("Unterminated string %s", yytext); }
-\"(\\.|[^"\n])*$	{ yyerror("Unterminated string %s", yytext); }
+'(\\.|[^'\n])*$	        { yyerror(pct_p, "Unterminated string %s", yytext); }
+\"(\\.|[^"\n])*$	{ yyerror(pct_p, "Unterminated string %s", yytext); }
 
    /* hex strings */
 X'[0-9A-F]+' |
@@ -331,13 +336,13 @@ COUNT                   { int c = input(); unput(c);
            yylval.strval = strdup(yytext);
            return NAME; }
 
-[A-Za-z][A-Za-z0-9_]*	{ yylval.strval = strdup(yytext);
+[A-Za-z][A-Za-z0-9_]*	{ yylval.sym = lookup(pct_p, yytext);
                           return NAME; }
 `[^`/\\.\n]+`           { yylval.strval = strdup(yytext+1);
                           yylval.strval[yyleng-2] = 0;
                           return NAME; }
 
-`[^`\n]*$               { yyerror("unterminated quoted name %s", yytext); }
+`[^`\n]*$               { yyerror(pct_p, "unterminated quoted name %s", yytext); }
 
 	/* user variables */
 @[0-9a-z_.$]+ |
@@ -345,9 +350,9 @@ COUNT                   { int c = input(); unput(c);
 @`[^`\n]+` |
 @'[^'\n]+'      { yylval.strval = strdup(yytext+1); return USERVAR; }
 
-@\"[^"\n]*$     { yyerror("unterminated quoted user variable %s", yytext); }
-@`[^`\n]*$      { yyerror("unterminated quoted user variable %s", yytext); }
-@'[^'\n]*$      { yyerror("unterminated quoted user variable %s", yytext); }
+@\"[^"\n]*$     { yyerror(pct_p, "unterminated quoted user variable %s", yytext); }
+@`[^`\n]*$      { yyerror(pct_p, "unterminated quoted user variable %s", yytext); }
+@'[^'\n]*$      { yyerror(pct_p, "unterminated quoted user variable %s", yytext); }
 
 
 ":="            { return ASSIGN; }
@@ -359,11 +364,11 @@ COUNT                   { int c = input(); unput(c);
 "/*"            { oldstate = YY_START; BEGIN COMMENT; }
 <COMMENT>"*/"   { BEGIN oldstate; }
 <COMMENT>.|\n   ;
-<COMMENT><<EOF>> { yyerror("unclosed comment"); }
+<COMMENT><<EOF>> { yyerror(pct_p, "unclosed comment"); }
 
 	/* everything else */
 [ \t\n]         /* white space */
-.               { yyerror("mystery character '%c'", *yytext); }
+.               { yyerror(pct_p, "mystery character '%c'", *yytext); }
 
 %%
 

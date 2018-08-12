@@ -34,3 +34,9 @@
 # Jetbrain
 .idea/
 cmake-build-debug/
+
+#flex
+scanner.h
+
+#test
+test.sql
