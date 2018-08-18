@@ -14,6 +14,6 @@ ADD_FLEX_BISON_DEPENDENCY(scanner parser)
 ADD_EXECUTABLE(FakeSQL
         main.cpp
         ${BISON_parser_OUTPUTS}
-        ${FLEX_scanner_OUTPUTS} driver.h driver.c)
+        ${FLEX_scanner_OUTPUTS} ast.c ast.h module.c module.h)
 
 set(CMAKE_CXX_STANDARD 11)

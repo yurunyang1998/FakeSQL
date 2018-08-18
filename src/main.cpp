@@ -1,9 +1,13 @@
 #include <iostream>
-#include "driver.h"
+#include "module.h"
 
 int main(int argc, const char *argv[])
 {
-    driver(argc, argv);
+    module *mod;
+    int i, res;
 
-    return 0;
+    mod = new_module_from_string("(add 1 2 (\"test\" 3 4) 5)");
+    res = parse_module(mod);
+    delete_module(mod);
+    return res;
 }
