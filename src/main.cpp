@@ -4,7 +4,7 @@
 int main(int argc, const char *argv[])
 {
     module *mod;
-    int i, res;
+    int res;
 
     mod = new_module_from_string("(add 1 2 (\"test\" 3 4) 5)");
     res = parse_module(mod);

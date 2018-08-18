@@ -20,7 +20,7 @@
 #include "scanner.h"
 
 void emit(char *s, ...);
-void yyerror(module *mod, const char *s, ...);
+void yyerror(const char *s, ...);
 %}
 %debug
 
@@ -399,12 +399,21 @@ stmt_list: stmt ';'
 
 /* select statement */
 
-stmt: select_stmt { emit("STMT"); }
+stmt: select_stmt
     ;
 
-select_stmt: SELECT select_opts select_expr_list { emit("SELECTNODATA %d %d", $2, $3); };
+select_stmt: SELECT select_opts select_expr_list {
+        /*
+        $$ = new_list_node();
+        add_opts_node_to_list($$, $2);
+        add_node_to_list($$, $3);
+        */
+    };
+    
     | SELECT select_opts select_expr_list FROM table_references opt_where opt_groupby opt_having opt_orderby opt_limit
-     opt_into_list { emit("SELECT %d %d %d", $2, $3, $5); };
+     opt_into_list {
+        
+     };
     ;
 
 opt_where: /* nil */
@@ -963,11 +972,11 @@ void emit(char *s, ...)
     return ;
 }
 
-void yyerror(module *mod, const char *s, ...)
+void yyerror(const char *s, ...)
 {
     va_list ap;
     va_start(ap, s);
     fprintf(stderr, "error: ");
-    vprintf(stderr, s, ap);
+    vfprintf(stderr, s, ap);
 
 }
