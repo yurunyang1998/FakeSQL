@@ -19,7 +19,7 @@ public:
     ~Socket();
 
     int fd() const { return fd_; }
-    void bind(Inetaddr &);
+    void bind(const Inetaddr &);
     void listen();
     int set_port_reuse();
     int set_addr_reuse();
@@ -31,7 +31,19 @@ private:
 };
 
 
-}
+
+class Connector : public boost::noncopyable {
+public:
+    Connector(const Inetaddr &addr);
+    ~Connector();
+    void make_listen();
+private:
+    Socket sockobj_;
+    Channel channelobj_;
+
+};
+
+} // end of net
 
 
 
