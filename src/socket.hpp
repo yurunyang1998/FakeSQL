@@ -7,6 +7,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <cerrno>
+#include <vector>
 #include "netutils.hpp"
 
 namespace net {
@@ -37,9 +38,10 @@ public:
     Connector(const Inetaddr &addr);
     ~Connector();
     void make_listen();
+    void loop();
 private:
     Socket sockobj_;
-    Channel channelobj_;
+    typedef std::vector<Channel *> ChannelList;
 
 };
 

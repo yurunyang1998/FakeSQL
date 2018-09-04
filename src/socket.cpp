@@ -69,23 +69,23 @@ int Socket::set_sock_nodelay()
     return ret;
 }
 
-
-Connector::Connector(const Inetaddr &addr)
-    : channelobj_(sockobj_.fd())
-{
-    sockobj_.set_addr_reuse();
-    sockobj_.bind(addr);
-}
-
-Connector::~Connector()
-{
-    channelobj_.disable_all();
-}
-
-void Connector::make_listen()
-{
-    sockobj_.listen();
-    channelobj_.enable_read();
-}
+//
+//Connector::Connector(const Inetaddr &addr)
+//    : channelobj_(sockobj_.fd())
+//{
+//    sockobj_.set_addr_reuse();
+//    sockobj_.bind(addr);
+//}
+//
+//Connector::~Connector()
+//{
+//    channelobj_.disable_all();
+//}
+//
+//void Connector::make_listen()
+//{
+//    sockobj_.listen();
+//    channelobj_.enable_read();
+//}
 
 } // end of net

@@ -32,6 +32,8 @@ int parse_module(module* mod)
     yyscan_t sc;
     int res;
 
+    yydebug = 1;
+
     yylex_init(&sc);
     yyset_in(mod->src.filefp, sc);
     res = yyparse(sc, mod);

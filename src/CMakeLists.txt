@@ -20,6 +20,6 @@ ADD_EXECUTABLE(FakeSQL
         socket.cpp socket.hpp
         netutils.cpp netutils.hpp
         epoller.cpp epoller.hpp
-        )
+        thread_loop.cpp thread_loop.hpp)
 
 set(CMAKE_CXX_STANDARD 11)

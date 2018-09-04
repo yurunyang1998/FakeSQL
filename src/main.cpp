@@ -4,13 +4,13 @@
 
 int main(int argc, const char *argv[])
 {
-//    module *mod;
-//    int res;
-//
-//    mod = new_module_from_string("(add 1 2 (\"test\" 3 4) 5)");
-//    res = parse_module(mod);
-//    delete_module(mod);
-//    return res;
+    module *mod;
+    int res;
+    char demo[] = "select a form z;";
 
+    mod = new_module_from_string(demo);
+    res = parse_module(mod);
+    delete_module(mod);
+    return res;
 
 }

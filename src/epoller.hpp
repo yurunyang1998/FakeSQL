@@ -9,28 +9,34 @@
 #include <vector>
 #include <utility>
 #include <set>
+#include <map>
+
+#include "netutils.hpp"
 
 #include <boost/core/noncopyable.hpp>
 
 namespace net {
 
-class Channel;
 
 typedef std::vector<Channel *>ChannelList;
 
 class EPoller : public boost::noncopyable {
 public:
-    EPoller();
+    EPoller(EventLoop *loop);
     ~EPoller();
     void update_channels(Channel *);
+    void remove_channels(Channel *);
     void poller(int timeout, ChannelList &list);
+    void update(int operation, Channel *channel);
 
 private:
-    void fill_active_channels(int num, ChannelList &list);
+    void fill_active_channels(int num, ChannelList &list) const;
 
-    int epollfd;
+    std::map<int, Channel*> channels_map_;
+    int epollfd_;
     std::vector<struct epoll_event> events_;
     std::set<std::pair<int, Channel *>> channels_;
+    EventLoop *ownerloop_;
 };
 
 

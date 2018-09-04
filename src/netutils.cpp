@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 #include <cassert>
+#include <thread_loop.hpp>
+#include <poll.h>
 
 namespace net {
 
@@ -39,8 +41,9 @@ const int Channel::event_write_ = EPOLLOUT;
 const int Channel::event_none_ = 0;
 
 
-Channel::Channel(int fd)
-    : fd_(fd), event_(0), revents_(0), index_(-1), handling_event_(false)
+Channel::Channel(EventLoop *loop, int fd)
+    : fd_(fd), event_(0), revents_(0), index_(-1),
+      handling_event_(false), loop_(loop), added_loop_(false)
 {
 
 }
@@ -48,13 +51,41 @@ Channel::Channel(int fd)
 Channel::~Channel()
 {
     assert(!handling_event_);
+    assert(added_loop_);
 }
 
 void Channel::update()
 {
-    // TODO: 将可用`Channel' 更新到调用循环中
-    return ;
+    added_loop_ = true;
+    loop_->updatechannel(this);
 }
 
+
+void Channel::remove()
+{
+    assert(is_noevent());
+    added_loop_ = false;
+    loop_->removechannel(this);
+}
+
+
+void Channel::handle_event()
+{
+    if(revents_ & POLLNVAL) {
+        fprintf(stderr, "Channel::handle_event() for fileno %d POLLNVAL", fd_);
+    }
+
+    if(revents_ & (POLLIN | POLLPRI | POLLRDHUP)) {
+        if(readcb_) {
+            readcb_();
+        }
+    }
+
+    if(revents_ & (POLLOUT)) {
+        if(writecb_) {
+            writecb_();
+        }
+    }
+}
 
 }
