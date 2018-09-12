@@ -100,6 +100,7 @@ namespace  utils {
                         value =point->leaf_node_point->searchkey(key);
                         cout<<value<<endl;
                         delete point;
+                        return  value;
                         break;
                     }
 

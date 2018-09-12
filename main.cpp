@@ -3,25 +3,32 @@
 
 //#include "B-tree_nodes.hpp"
 #include "B-tree-initial.hpp"
+#include "file_read_write_system.h"
 #include <random>
 using namespace utils;
 int main() {
 
 
-    Manager<int, int> manager(-2147483648);
+//    Manager<int, int> manager(-2147483648);
+//
+//    for(int i=0;i<25;i++)
+//        manager.insert_data(14,5);
+//
+//    for (int i=0;i<50;i++)
+//        manager.data_search(i);
 
-    vector<int> array;
-    for(int i=0;i<1000;i++)
-        array.push_back(rand()%10000);
-    for (int i=0;i<1000;i++)
-    {
-        manager.insert_data(array[i],i);
-    }
-    for (int i=0;i<1000;i++)
-    {
-        manager.data_search(array[i]);
-    }
+    basic_read_write testfile("../test");
+    testfile.insert_value("jtsghrz");
+    testfile.read_value();
+
+
+
 }
+
+
+
+
+
 
 // reply:
 // ???????????????

@@ -3,5 +3,5 @@ project(the_new_fake_sql)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES main.cpp B-tree_nodes.hpp B-tree-initial.hpp pub_friends.hpp)
+set(SOURCE_FILES main.cpp B-tree_nodes.hpp B-tree-initial.hpp pub_friends.hpp file_read_write_system.h file_read_write_system.cpp)
 add_executable(the_new_fake_sql ${SOURCE_FILES})
