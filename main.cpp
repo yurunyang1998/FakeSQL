@@ -17,9 +17,10 @@ int main() {
 //    for (int i=0;i<50;i++)
 //        manager.data_search(i);
 
-    basic_read_write testfile("../test");
-    testfile.insert_value("jtsghrz");
-    testfile.read_value();
+    basic_read_write testfile("../test.tfrecord");
+    int a;
+//    testfile.insert_value("jtsghrz");
+//    testfile.read_value();
 
 
 
