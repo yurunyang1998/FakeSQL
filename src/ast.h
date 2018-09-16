@@ -91,10 +91,32 @@ ast_node_opts *new_opts_node(enum opts_types type, void *v);
 void delete_opts_node(ast_node_opts *node);
 void add_opts_node_to_list(ast_node_list *list, ast_node_opts *node);
 
+typedef struct table_list {
+    char *name;
+    struct table_list *next;
+} table_list_t;
+
+
+typedef struct command_callback {
+    void (*callback)(void *);
+    struct command_list *next;
+} cmd_list_t;
+
+
+typedef struct columns_list {
+
+} columns_list_t;
+
+
+struct sql_cmd {
+    table_list_t *TableList;
+    cmd_list_t *CmdList;
+};
+
+
 #ifdef __cplusplus
 }
 #endif
-
 
 
 #endif //AST_H_
