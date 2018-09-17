@@ -5,22 +5,27 @@
 #include "B-tree-initial.hpp"
 #include "file_read_write_system.h"
 #include <random>
+#include <bson.h>
+
 using namespace utils;
 int main() {
 
 
-//    Manager<int, int> manager(-2147483648);
-//
-//    for(int i=0;i<25;i++)
-//        manager.insert_data(14,5);
-//
-//    for (int i=0;i<50;i++)
-//        manager.data_search(i);
+    Manager<int, int> manager(-2147483648);
 
-    basic_read_write testfile("../test");
-    testfile.insert_value("jtsghrz");
-    testfile.read_value();
+    for(int i=0;i<100000;i++) {
+        if (i % 1000 == 0)
+            cout << i << endl;
+        manager.insert_data(i, i);
+    }
 
+
+    for (int i=0;i<50;i++)
+        manager.data_search(i);
+
+//    basic_read_write testfile("../test");
+//    testfile.insert_value("jtsghrz");
+//    testfile.read_value();
 
 
 }
