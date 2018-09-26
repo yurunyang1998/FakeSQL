@@ -376,11 +376,12 @@ void yyerror(const char *s, ...);
 %token FDATE_ADD FDATE_SUB
 %token FCOUNT
 
+/*
+%type <ast_node_sexp*> select_stmt create_table_stmt select_expr_list table_references
 
-%type <intval> select_opts select_expr_list
-%type <intval> val_list opt_val_list case_list
+%type <intval> val_list opt_val_list case_list select_opts
 %type <intval> groupby_list opt_with_rollup opt_asc_desc
-%type <intval> table_references opt_inner_cross opt_outer
+%type <intval> opt_inner_cross opt_outer
 %type <intval> left_or_right opt_left_or_right_outer column_list
 %type <intval> index_list opt_for_join
 %type <intval> delete_opts delete_list
@@ -388,6 +389,9 @@ void yyerror(const char *s, ...);
 %type <intval> insert_asgn_list opt_if_not_exists update_opts update_asgn_list
 %type <intval> opt_temporary opt_length opt_binary opt_uz enum_list
 %type <intval> column_atts data_type opt_ignore_replace create_col_list
+*/
+
+%type <ast_node_sexp*> create_table_stmt
 
 %start stmt_list
 
@@ -397,317 +401,28 @@ stmt_list: stmt ';'
     | stmt_list stmt ';'
     ;
 
-/* select statement */
-
-stmt: select_stmt
-    ;
-
-select_stmt: SELECT select_opts select_expr_list {
-        /*
-        $$ = new_list_node();
-        add_opts_node_to_list($$, $2);
-        add_node_to_list($$, $3);
-        */
-    };
-    
-    | SELECT select_opts select_expr_list FROM table_references opt_where opt_groupby opt_having opt_orderby opt_limit
-     opt_into_list {
-        
-     };
-    ;
-
-opt_where: /* nil */
-    | WHERE expr { emit("WHERE"); };
-
-opt_groupby: /* nil */ 
-    | GROUP BY groupby_list opt_with_rollup { emit("GROUPBYLIST %d %d", $3, $4); }
-    ;
-
-groupby_list: expr opt_asc_desc
-            { emit("GROUPBY %d",  $2); $$ = 1; }
-   | groupby_list ',' expr opt_asc_desc
-                             { emit("GROUPBY %d",  $4); $$ = $1 + 1; }
-    ;
-
-opt_asc_desc: /* nil */ { $$ = 0; }
-    | ASC           { $$ = 0; }
-    | DESC          { $$ = 1; }
-    ;
-
-opt_with_rollup: /* nil */  { $$ = 0; }
-    | WITH ROLLUP   { $$ = 1; }
-    ;
-
-opt_having: /* nil */
-    | HAVING expr   { emit("HAVING"); }
-    ;
-
-opt_orderby: /* nil */ | ORDER BY groupby_list { emit("ORDERBY %d", $3); }
-    ;
-
-opt_limit: /* nil */
-    | LIMIT expr    { emit("LIMIT 1"); }
-    | LIMIT expr ',' expr { emit("LIMIT 2"); }
-    ;
-
-opt_into_list: /* nil */ 
-    | INTO column_list  { emit("INTO %d", $2); }
-    ;
-
-column_list: NAME           { emit("COLUMN %s", $1); free($1); $$ = 1; }
-    | column_list ',' NAME  { emit("COLUMN %s", $3); free($3); $$ = $1 + 1; }
-    ;
-
-select_opts:                          { $$ = 0; }
-    | select_opts ALL                 { if($$ & 01) yyerror("duplicate ALL option"); $$ = $1 | 01; }
-    | select_opts DISTINCT            { if($$ & 02) yyerror("duplicate DISTINCT option"); $$ = $1 | 02; }
-    | select_opts DISTINCTROW         { if($$ & 04) yyerror("duplicate DISTINCTROW option"); $$ = $1 | 04; }
-    | select_opts HIGH_PRIORITY       { if($$ & 010) yyerror("duplicate HIGH_PRIORITY option"); $$ = $1 | 010; }
-    | select_opts STRAIGHT_JOIN       { if($$ & 020) yyerror("duplicate STRAIGHT_JOIN option"); $$ = $1 | 020; }
-    | select_opts SQL_SMALL_RESULT    { if($$ & 040) yyerror("duplicate SQL_SMALL_RESULT option"); $$ = $1 | 040; }
-    | select_opts SQL_BIG_RESULT      { if($$ & 0100) yyerror("duplicate SQL_BIG_RESULT option"); $$ = $1 | 0100; }
-    | select_opts SQL_CALC_FOUND_ROWS { if($$ & 0200) yyerror("duplicate SQL_CALC_FOUND_ROWS option"); $$ = $1 | 0200; }
-    ;
-
-select_expr_list: select_expr           { $$ = 1; }
-    | select_expr_list ',' select_expr  { $$ = $1 + 1; }
-    | '*'                               { emit("SELECTALL"); $$ = 1; }
-    ;
-
-select_expr: expr opt_as_alias ;
-
-table_references: table_reference           { $$ = 1; }
-    | table_references ',' table_reference  { $$ = $1 + 1; }
-    ;
-
-table_reference: table_factor
-    | join_table
-    ;
-
-table_factor: NAME opt_as_alias index_hint  { emit("TABLE %s", $1); free($1); }
-    | NAME '.' NAME opt_as_alias index_hint { emit("TABLE %s.%s", $1, $3); free($1); free($3); }
-    | table_subquery opt_as NAME            { emit("SUBQUERYAS %s", $3); free($3); }
-    | '(' table_references ')'              { emit("TABLEREFERENCES %d", $2); }
-    ;
-
-opt_as: AS
-    | /* nil */
-    ;
-
-opt_as_alias: AS NAME   { emit ("ALIAS %s", $2); free($2); }
-    | NAME              { emit ("ALIAS %s", $1); free($1); }
-    | /* nil */
-    ;
-
-join_table: table_reference opt_inner_cross JOIN table_factor opt_join_condition
-                  { emit("JOIN %d", 0100+$2); }
-    | table_reference STRAIGHT_JOIN table_factor
-                  { emit("JOIN %d", 0200); }
-    | table_reference STRAIGHT_JOIN table_factor ON expr
-                  { emit("JOIN %d", 0200); }
-    | table_reference left_or_right opt_outer JOIN table_factor join_condition
-                  { emit("JOIN %d", 0300+$2+$3); }
-    | table_reference NATURAL opt_left_or_right_outer JOIN table_factor
-                  { emit("JOIN %d", 0400+$3); }
-    ;
-
-opt_inner_cross: /* nil */ { $$ = 0; }
-    | INNER { $$ = 1; }
-    | CROSS { $$ = 2; }
-    ;
-
-opt_outer: /* nil */  { $$ = 0; }
-    | OUTER {$$ = 4; }
-    ;
-
-left_or_right: LEFT { $$ = 1; }
-    | RIGHT         { $$ = 2; }
-    ;
-
-opt_left_or_right_outer: LEFT opt_outer { $$ = 1 + $2; }
-    | RIGHT opt_outer  { $$ = 2 + $2; }
-    | /* nil */ { $$ = 0; }
-    ;
-
-opt_join_condition: join_condition
-    | /* nil */
-    ;
-
-join_condition: ON expr { emit("ONEXPR"); }
-    | USING '(' column_list ')' { emit("USING %d", $3); }
-    ;
-
-index_hint: USE KEY opt_for_join '(' index_list ')'
-                  { emit("INDEXHINT %d %d", $5, 010+$3); }
-    | IGNORE KEY opt_for_join '(' index_list ')'
-                  { emit("INDEXHINT %d %d", $5, 020+$3); }
-    | FORCE KEY opt_for_join '(' index_list ')'
-                  { emit("INDEXHINT %d %d", $5, 030+$3); }
-    | /* nil */
-    ;
-
-opt_for_join: FOR JOIN { $$ = 1; }
-    | /* nil */        { $$ = 0; }
-    ;
-
-index_list: NAME  { emit("INDEX %s", $1); free($1); $$ = 1; }
-    | index_list ',' NAME { emit("INDEX %s", $3); free($3); $$ = $1 + 1; }
-    ;
-
-table_subquery: '(' select_stmt ')' { emit("SUBQUERY"); }
-    ;
-
-
-    /* delete statement */
-
-stmt: delete_stmt { emit("STMT"); }
-    ;
-
-delete_stmt: DELETE delete_opts FROM NAME opt_where opt_orderby opt_limit
-                  { emit("DELETEONE %d %s", $2, $4); free($4); }
-    ;
-
-delete_opts: delete_opts LOW_PRIORITY { $$ = $1 + 01; }
-    | delete_opts QUICK { $$ = $1 + 02; }
-    | delete_opts IGNORE { $$ = $1 + 04; }
-    | /* nil */ { $$ = 0; }
-    ;
-
-delete_stmt: DELETE delete_opts delete_list
-    FROM table_references opt_where { emit("DELETEMULTI %d %d %d", $2, $3, $5); }
-
-delete_list: NAME opt_dot_star { emit("TABLE %s", $1); free($1); $$ = 1; }
-    | delete_list ',' NAME opt_dot_star { emit("TABLE %s", $3); free($3); $$ = $1 + 1; }
-    ;
-
-opt_dot_star: /* nil */ | '.' '*'
-    ;
-
-delete_stmt: DELETE delete_opts FROM delete_list USING table_references opt_where
-            { emit("DELETEMULTI %d %d %d", $2, $4, $6); }
-    ;
-
-    /* insert statement */
-
-
-stmt: insert_stmt { emit("STMT"); }
-    ;
-
-insert_stmt: INSERT insert_opts opt_into NAME opt_col_names VALUES insert_vals_list opt_ondupupdate
-                { emit("INSERTVALS %d %d %s", $2, $7, $4); free($4); }
-    ;
-
-opt_ondupupdate: /* nil */
-    | ONDUPLICATE KEY UPDATE insert_asgn_list { emit("DUPUPDATE %d", $4); }
-    ;
-
-insert_opts: /* nil */          { $$ = 0; }
-    | insert_opts LOW_PRIORITY  { $$ = $1 | 01 ; }
-    | insert_opts DELAYED       { $$ = $1 | 02 ; }
-    | insert_opts HIGH_PRIORITY { $$ = $1 | 04 ; }
-    | insert_opts IGNORE        { $$ = $1 | 010 ; }
-    ;
-
-opt_into: INTO
-    | /* nil */
-    ;
-
-opt_col_names: /* nil */
-    | '(' column_list ')' { emit("INSERTCOLS %d", $2); }
-    ;
-
-insert_vals_list: '(' insert_vals ')'           { emit("VALUES %d", $2); $$ = 1; }
-    | insert_vals_list ',' '(' insert_vals ')'  { emit("VALUES %d", $4); $$ = $1 + 1; }
-
-insert_vals: expr               { $$ = 1; }
-    | DEFAULT                   { emit("DEFAULT"); $$ = 1; }
-    | insert_vals ',' expr      { $$ = $1 + 1; }
-    | insert_vals ',' DEFAULT   { emit("DEFAULT"); $$ = $1 + 1; }
-    ;
-
-insert_stmt: INSERT insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate
-                    { emit("INSERTASGN %d %d %s", $2, $6, $4); free($4); }
-    ;
-
-insert_stmt: INSERT insert_opts opt_into NAME opt_col_names select_stmt opt_ondupupdate
-                    { emit("INSERTSELECT %d %s", $2, $4); free($4); }
-    ;
-
-insert_asgn_list: NAME COMPARISON expr { if ($2 != 4) yyerror("bad insert assignment to %s", $1);
-                    emit("ASSIGN %s", $1); free($1); $$ = 1; }
-    | NAME COMPARISON DEFAULT { if ($2 != 4) yyerror("bad insert assignment to %s", $1);
-                    emit("DEFAULT"); emit("ASSIGN %s", $1); free($1); $$ = 1; }
-    | insert_asgn_list ',' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $1);
-                    emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
-    | insert_asgn_list ',' NAME COMPARISON DEFAULT { if ($4 != 4) yyerror("bad insert assignment to %s", $1);
-                    emit("DEFAULT"); emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
-    ;
-
-
-    /* replace */
-stmt: replace_stmt { emit("STMT"); }
-    ;
-
-replace_stmt: REPLACE insert_opts opt_into NAME opt_col_names VALUES insert_vals_list opt_ondupupdate
-                { emit("REPLACEVALS %d %d %s", $2, $7, $4); free($4); }
-    ;
-
-replace_stmt: REPLACE insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate
-                { emit("REPLACEASGN %d %d %s", $2, $6, $4); free($4); }
-    ;
-
-replace_stmt: REPLACE insert_opts opt_into NAME opt_col_names select_stmt opt_ondupupdate
-                { emit("REPLACESELECT %d %s", $2, $4); free($4); }
-    ;
-
-/** update **/
-stmt: update_stmt { emit("STMT"); }
-    ;
-
-update_stmt: UPDATE update_opts table_references SET update_asgn_list opt_where opt_orderby opt_limit
-                { emit("UPDATE %d %d %d", $2, $3, $5); }
-    ;
-
-update_opts: /* nil */          { $$ = 0; }
-    | insert_opts LOW_PRIORITY  { $$ = $1 | 01 ; }
-    | insert_opts IGNORE        { $$ = $1 | 010 ; }
-    ;
-
-update_asgn_list: NAME COMPARISON expr { if ($2 != 4) yyerror("bad insert assignment to %s", $1);
-                emit("ASSIGN %s", $1); free($1); $$ = 1; }
-    | NAME '.' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $1);
-                emit("ASSIGN %s.%s", $1, $3); free($1); free($3); $$ = 1; }
-    | update_asgn_list ',' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $3);
-                emit("ASSIGN %s.%s", $3); free($3); $$ = $1 + 1; }
-    | update_asgn_list ',' NAME '.' NAME COMPARISON expr { if ($6 != 4) yyerror("bad insert assignment to %s.$s", $3, $5);
-                emit("ASSIGN %s.%s", $3, $5); free($3); free($5); $$ = 1; }
-    ;
-
-
-/** create database **/
-
-stmt: create_database_stmt { emit("STMT"); }
-    ;
-
-create_database_stmt: CREATE DATABASE opt_if_not_exists NAME    { emit("CREATEDATABASE %d %s", $3, $4); free($4); }
-    | CREATE SCHEMA opt_if_not_exists NAME                      { emit("CREATEDATABASE %d %s", $3, $4); free($4); }
-    ;
-
-opt_if_not_exists:  /* nil */ { $$ = 0; }
-    | IF EXISTS           { if(!$2)yyerror("IF EXISTS doesn't exist"); $$ = $2; }
-    ;
-
-
 /** create table **/
-stmt: create_table_stmt { emit("STMT"); }
+stmt: create_table_stmt { mod->root = $1; }
     ;
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
-            { emit("CREATE %d %d %d %s", $2, $4, $7, $5); free($5); }
+            {
+                ast_node_sexp *root, tmp;
+                tmp = new_sexp_node(ST_ATOM, $5);
+                // TODO: implement another function which can add node of `atom' to the structure `sexp'
+                ast_node_atom *_item = new_atom_node(AT_STRING, (void *)$7);
+                add_node_atom_to(root, _item);
+                $$ = root;
+                emit("CREATE %d %d %d %s", $2, $4, $7, $5);
+                free($5);
+            }
     ;
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME '(' create_col_list ')'
-            { emit("CREATE %d %d %d %s.%s", $2, $4, $9, $5, $7); free($5); free($7); }
+            {
+
+                emit("CREATE %d %d %d %s.%s", $2, $4, $9, $5, $7); free($5); free($7);
+            }
     ;
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
@@ -820,18 +535,314 @@ opt_temporary:   /* nil */ { $$ = 0; }
     | TEMPORARY { $$ = 1;}
     ;
 
+/* select statement */
+
+/* 先注释掉大部分规则，等后面加入 */
+/* stmt: select_stmt { mod->root = $1; } */
+    /* ; */
+/*  */
+/* select_stmt: SELECT select_opts select_expr_list FROM table_references opt_where opt_groupby opt_having opt_orderby opt_limit */
+     /* opt_into_list { */
+        /* $$ = new_sexp_node(ST_LIST, $3); */
+        /* $$ = new_sexp_node(ST_LIST, $5); */
+     /* } */
+    /* ; */
+/*  */
+/* opt_where: [> nil <] */
+    /* | WHERE expr { emit("WHERE"); }; */
+/*  */
+/* opt_groupby: [> nil <]  */
+    /* | GROUP BY groupby_list opt_with_rollup { emit("GROUPBYLIST %d %d", $3, $4); } */
+    /* ; */
+/*  */
+/* groupby_list: expr opt_asc_desc */
+            /* { emit("GROUPBY %d",  $2); $$ = 1; } */
+   /* | groupby_list ',' expr opt_asc_desc */
+                             /* { emit("GROUPBY %d",  $4); $$ = $1 + 1; } */
+    /* ; */
+/*  */
+/* opt_asc_desc: [> nil <] { $$ = 0; } */
+    /* | ASC           { $$ = 0; } */
+    /* | DESC          { $$ = 1; } */
+    /* ; */
+/*  */
+/* opt_with_rollup: [> nil <]  { $$ = 0; } */
+    /* | WITH ROLLUP   { $$ = 1; } */
+    /* ; */
+/*  */
+/* opt_having: [> nil <] */
+    /* | HAVING expr   { emit("HAVING"); } */
+    /* ; */
+/*  */
+/* opt_orderby: [> nil <] | ORDER BY groupby_list { emit("ORDERBY %d", $3); } */
+    /* ; */
+/*  */
+/* opt_limit: [> nil <] */
+    /* | LIMIT expr    { emit("LIMIT 1"); } */
+    /* | LIMIT expr ',' expr { emit("LIMIT 2"); } */
+    /* ; */
+/*  */
+/* opt_into_list: [> nil <]  */
+    /* | INTO column_list  { emit("INTO %d", $2); } */
+    /* ; */
+/*  */
+/* column_list: NAME           { emit("COLUMN %s", $1); free($1); $$ = 1; } */
+    /* | column_list ',' NAME  { emit("COLUMN %s", $3); free($3); $$ = $1 + 1; } */
+    /* ; */
+/*  */
+/* select_opts:                          { $$ = 0; } */
+    /* | select_opts ALL                 { if($$ & 01) yyerror("duplicate ALL option"); $$ = $1 | 01; } */
+    /* | select_opts DISTINCT            { if($$ & 02) yyerror("duplicate DISTINCT option"); $$ = $1 | 02; } */
+    /* | select_opts DISTINCTROW         { if($$ & 04) yyerror("duplicate DISTINCTROW option"); $$ = $1 | 04; } */
+    /* | select_opts HIGH_PRIORITY       { if($$ & 010) yyerror("duplicate HIGH_PRIORITY option"); $$ = $1 | 010; } */
+    /* | select_opts STRAIGHT_JOIN       { if($$ & 020) yyerror("duplicate STRAIGHT_JOIN option"); $$ = $1 | 020; } */
+    /* | select_opts SQL_SMALL_RESULT    { if($$ & 040) yyerror("duplicate SQL_SMALL_RESULT option"); $$ = $1 | 040; } */
+    /* | select_opts SQL_BIG_RESULT      { if($$ & 0100) yyerror("duplicate SQL_BIG_RESULT option"); $$ = $1 | 0100; } */
+    /* | select_opts SQL_CALC_FOUND_ROWS { if($$ & 0200) yyerror("duplicate SQL_CALC_FOUND_ROWS option"); $$ = $1 | 0200; } */
+    /* ; */
+/*  */
+/* select_expr_list: select_expr           { $$ = 1; } */
+    /* | select_expr_list ',' select_expr  { $$ = $1 + 1; } */
+    /* | '*'                               { emit("SELECTALL"); $$ = 1; } */
+    /* ; */
+/*  */
+/* select_expr: expr opt_as_alias ; */
+/*  */
+/* table_references: table_reference           { $$ = 1; } */
+    /* | table_references ',' table_reference  { $$ = $1 + 1; } */
+    /* ; */
+/*  */
+/* table_reference: table_factor */
+    /* | join_table */
+    /* ; */
+/*  */
+/* table_factor: NAME opt_as_alias index_hint  { emit("TABLE %s", $1); free($1); } */
+    /* | NAME '.' NAME opt_as_alias index_hint { emit("TABLE %s.%s", $1, $3); free($1); free($3); } */
+    /* | table_subquery opt_as NAME            { emit("SUBQUERYAS %s", $3); free($3); } */
+    /* | '(' table_references ')'              { emit("TABLEREFERENCES %d", $2); } */
+    /* ; */
+/*  */
+/* opt_as: AS */
+    /* | [> nil <] */
+    /* ; */
+/*  */
+/* opt_as_alias: AS NAME   { emit ("ALIAS %s", $2); free($2); } */
+    /* | NAME              { emit ("ALIAS %s", $1); free($1); } */
+    /* | [> nil <] */
+    /* ; */
+/*  */
+/* join_table: table_reference opt_inner_cross JOIN table_factor opt_join_condition */
+                  /* { emit("JOIN %d", 0100+$2); } */
+    /* | table_reference STRAIGHT_JOIN table_factor */
+                  /* { emit("JOIN %d", 0200); } */
+    /* | table_reference STRAIGHT_JOIN table_factor ON expr */
+                  /* { emit("JOIN %d", 0200); } */
+    /* | table_reference left_or_right opt_outer JOIN table_factor join_condition */
+                  /* { emit("JOIN %d", 0300+$2+$3); } */
+    /* | table_reference NATURAL opt_left_or_right_outer JOIN table_factor */
+                  /* { emit("JOIN %d", 0400+$3); } */
+    /* ; */
+/*  */
+/* opt_inner_cross: [> nil <] { $$ = 0; } */
+    /* | INNER { $$ = 1; } */
+    /* | CROSS { $$ = 2; } */
+    /* ; */
+/*  */
+/* opt_outer: [> nil <]  { $$ = 0; } */
+    /* | OUTER {$$ = 4; } */
+    /* ; */
+/*  */
+/* left_or_right: LEFT { $$ = 1; } */
+    /* | RIGHT         { $$ = 2; } */
+    /* ; */
+/*  */
+/* opt_left_or_right_outer: LEFT opt_outer { $$ = 1 + $2; } */
+    /* | RIGHT opt_outer  { $$ = 2 + $2; } */
+    /* | [> nil <] { $$ = 0; } */
+    /* ; */
+/*  */
+/* opt_join_condition: join_condition */
+    /* | [> nil <] */
+    /* ; */
+/*  */
+/* join_condition: ON expr { emit("ONEXPR"); } */
+    /* | USING '(' column_list ')' { emit("USING %d", $3); } */
+    /* ; */
+/*  */
+/* index_hint: USE KEY opt_for_join '(' index_list ')' */
+                  /* { emit("INDEXHINT %d %d", $5, 010+$3); } */
+    /* | IGNORE KEY opt_for_join '(' index_list ')' */
+                  /* { emit("INDEXHINT %d %d", $5, 020+$3); } */
+    /* | FORCE KEY opt_for_join '(' index_list ')' */
+                  /* { emit("INDEXHINT %d %d", $5, 030+$3); } */
+    /* | [> nil <] */
+    /* ; */
+/*  */
+/* opt_for_join: FOR JOIN { $$ = 1; } */
+    /* | [> nil <]        { $$ = 0; } */
+    /* ; */
+/*  */
+/* index_list: NAME  { emit("INDEX %s", $1); free($1); $$ = 1; } */
+    /* | index_list ',' NAME { emit("INDEX %s", $3); free($3); $$ = $1 + 1; } */
+    /* ; */
+/*  */
+/* table_subquery: '(' select_stmt ')' { emit("SUBQUERY"); } */
+    /* ; */
+/*  */
+/*  */
+    /* [> delete statement <] */
+/*  */
+/* stmt: delete_stmt { emit("STMT"); } */
+    /* ; */
+/*  */
+/* delete_stmt: DELETE delete_opts FROM NAME opt_where opt_orderby opt_limit */
+                  /* { emit("DELETEONE %d %s", $2, $4); free($4); } */
+    /* ; */
+/*  */
+/* delete_opts: delete_opts LOW_PRIORITY { $$ = $1 + 01; } */
+    /* | delete_opts QUICK { $$ = $1 + 02; } */
+    /* | delete_opts IGNORE { $$ = $1 + 04; } */
+    /* | [> nil <] { $$ = 0; } */
+    /* ; */
+/*  */
+/* delete_stmt: DELETE delete_opts delete_list */
+    /* FROM table_references opt_where { emit("DELETEMULTI %d %d %d", $2, $3, $5); } */
+/*  */
+/* delete_list: NAME opt_dot_star { emit("TABLE %s", $1); free($1); $$ = 1; } */
+    /* | delete_list ',' NAME opt_dot_star { emit("TABLE %s", $3); free($3); $$ = $1 + 1; } */
+    /* ; */
+/*  */
+/* opt_dot_star: [> nil <] | '.' '*' */
+    /* ; */
+/*  */
+/* delete_stmt: DELETE delete_opts FROM delete_list USING table_references opt_where */
+            /* { emit("DELETEMULTI %d %d %d", $2, $4, $6); } */
+    /* ; */
+/*  */
+    /* [> insert statement <] */
+/*  */
+/*  */
+/* stmt: insert_stmt { emit("STMT"); } */
+    /* ; */
+/*  */
+/* insert_stmt: INSERT insert_opts opt_into NAME opt_col_names VALUES insert_vals_list opt_ondupupdate */
+                /* { emit("INSERTVALS %d %d %s", $2, $7, $4); free($4); } */
+    /* ; */
+/*  */
+/* opt_ondupupdate: [> nil <] */
+    /* | ONDUPLICATE KEY UPDATE insert_asgn_list { emit("DUPUPDATE %d", $4); } */
+    /* ; */
+/*  */
+/* insert_opts: [> nil <]          { $$ = 0; } */
+    /* | insert_opts LOW_PRIORITY  { $$ = $1 | 01 ; } */
+    /* | insert_opts DELAYED       { $$ = $1 | 02 ; } */
+    /* | insert_opts HIGH_PRIORITY { $$ = $1 | 04 ; } */
+    /* | insert_opts IGNORE        { $$ = $1 | 010 ; } */
+    /* ; */
+/*  */
+/* opt_into: INTO */
+    /* | [> nil <] */
+    /* ; */
+/*  */
+/* opt_col_names: [> nil <] */
+    /* | '(' column_list ')' { emit("INSERTCOLS %d", $2); } */
+    /* ; */
+/*  */
+/* insert_vals_list: '(' insert_vals ')'           { emit("VALUES %d", $2); $$ = 1; } */
+    /* | insert_vals_list ',' '(' insert_vals ')'  { emit("VALUES %d", $4); $$ = $1 + 1; } */
+/*  */
+/* insert_vals: expr               { $$ = 1; } */
+    /* | DEFAULT                   { emit("DEFAULT"); $$ = 1; } */
+    /* | insert_vals ',' expr      { $$ = $1 + 1; } */
+    /* | insert_vals ',' DEFAULT   { emit("DEFAULT"); $$ = $1 + 1; } */
+    /* ; */
+/*  */
+/* insert_stmt: INSERT insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate */
+                    /* { emit("INSERTASGN %d %d %s", $2, $6, $4); free($4); } */
+    /* ; */
+/*  */
+/* insert_stmt: INSERT insert_opts opt_into NAME opt_col_names select_stmt opt_ondupupdate */
+                    /* { emit("INSERTSELECT %d %s", $2, $4); free($4); } */
+    /* ; */
+/*  */
+/* insert_asgn_list: NAME COMPARISON expr { if ($2 != 4) yyerror("bad insert assignment to %s", $1); */
+                    /* emit("ASSIGN %s", $1); free($1); $$ = 1; } */
+    /* | NAME COMPARISON DEFAULT { if ($2 != 4) yyerror("bad insert assignment to %s", $1); */
+                    /* emit("DEFAULT"); emit("ASSIGN %s", $1); free($1); $$ = 1; } */
+    /* | insert_asgn_list ',' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $1); */
+                    /* emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; } */
+    /* | insert_asgn_list ',' NAME COMPARISON DEFAULT { if ($4 != 4) yyerror("bad insert assignment to %s", $1); */
+                    /* emit("DEFAULT"); emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; } */
+    /* ; */
+/*  */
+/*  */
+    /* [> replace <] */
+/* stmt: replace_stmt { emit("STMT"); } */
+    /* ; */
+/*  */
+/* replace_stmt: REPLACE insert_opts opt_into NAME opt_col_names VALUES insert_vals_list opt_ondupupdate */
+                /* { emit("REPLACEVALS %d %d %s", $2, $7, $4); free($4); } */
+    /* ; */
+/*  */
+/* replace_stmt: REPLACE insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate */
+                /* { emit("REPLACEASGN %d %d %s", $2, $6, $4); free($4); } */
+    /* ; */
+/*  */
+/* replace_stmt: REPLACE insert_opts opt_into NAME opt_col_names select_stmt opt_ondupupdate */
+                /* { emit("REPLACESELECT %d %s", $2, $4); free($4); } */
+    /* ; */
+/*  */
+/* [>* update *<] */
+/* stmt: update_stmt { emit("STMT"); } */
+    /* ; */
+/*  */
+/* update_stmt: UPDATE update_opts table_references SET update_asgn_list opt_where opt_orderby opt_limit */
+                /* { emit("UPDATE %d %d %d", $2, $3, $5); } */
+    /* ; */
+/*  */
+/* update_opts: [> nil <]          { $$ = 0; } */
+    /* | insert_opts LOW_PRIORITY  { $$ = $1 | 01 ; } */
+    /* | insert_opts IGNORE        { $$ = $1 | 010 ; } */
+    /* ; */
+/*  */
+/* update_asgn_list: NAME COMPARISON expr { if ($2 != 4) yyerror("bad insert assignment to %s", $1); */
+                /* emit("ASSIGN %s", $1); free($1); $$ = 1; } */
+    /* | NAME '.' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $1); */
+                /* emit("ASSIGN %s.%s", $1, $3); free($1); free($3); $$ = 1; } */
+    /* | update_asgn_list ',' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $3); */
+                /* emit("ASSIGN %s.%s", $3); free($3); $$ = $1 + 1; } */
+    /* | update_asgn_list ',' NAME '.' NAME COMPARISON expr { if ($6 != 4) yyerror("bad insert assignment to %s.$s", $3, $5); */
+                /* emit("ASSIGN %s.%s", $3, $5); free($3); free($5); $$ = 1; } */
+    /* ; */
+/*  */
+
+/** create database **/
+
+/* stmt: create_database_stmt { emit("STMT"); } */
+    /* ; */
+/*  */
+/* create_database_stmt: CREATE DATABASE opt_if_not_exists NAME    { emit("CREATEDATABASE %d %s", $3, $4); free($4); } */
+    /* | CREATE SCHEMA opt_if_not_exists NAME                      { emit("CREATEDATABASE %d %s", $3, $4); free($4); } */
+    /* ; */
+/*  */
+/* opt_if_not_exists:  [> nil <] { $$ = 0; } */
+    /* | IF EXISTS           { if(!$2)yyerror("IF EXISTS doesn't exist"); $$ = $2; } */
+    /* ; */
+
+
+
 /* set user variables */
 
-stmt: set_stmt { emit("STMT"); }
-    ;
-
-set_stmt: SET set_list ;
-
-set_list: set_expr | set_list ',' set_expr ;
-
-set_expr: USERVAR COMPARISON expr { if ($2 != 4) yyerror("bad set to @%s", $1); emit("SET %s", $1); free($1); }
-    | USERVAR ASSIGN expr { emit("SET %s", $1); free($1); }
-    ;
+/* stmt: set_stmt { emit("STMT"); } */
+    /* ; */
+/*  */
+/* set_stmt: SET set_list ; */
+/*  */
+/* set_list: set_expr | set_list ',' set_expr ; */
+/*  */
+/* set_expr: USERVAR COMPARISON expr { if ($2 != 4) yyerror("bad set to @%s", $1); emit("SET %s", $1); free($1); } */
+    /* | USERVAR ASSIGN expr { emit("SET %s", $1); free($1); } */
+    /* ; */
 
 /**** expressions ****/
 
@@ -899,61 +910,61 @@ expr: NAME '(' opt_val_list ')' { emit("CALL %d %s", $3, $1); free($1); }
 
 /* functions with special syntax */
 
-expr: FCOUNT '(' '*' ')'    { emit("COUNTALL"); }
-    | FCOUNT '(' expr ')'   { emit(" CALL 1 COUNT"); }
-
-expr: FSUBSTRING '(' val_list ')'                   { emit("CALL %d SUBSTR", $3); }
-    | FSUBSTRING '(' expr FROM expr ')'             { emit("CALL 2 SUBSTR"); }
-    | FSUBSTRING '(' expr FROM expr FOR expr ')'    { emit("CALL 3 SUBSTR"); }
-    | FTRIM '(' val_list ')'                        { emit("CALL %d TRIM", $3); }
-    | FTRIM '(' trim_ltb expr FROM val_list ')'     { emit("CALL 3 TRIM"); }
-    ;
-
-trim_ltb: LEADING   { emit("INT 1"); }
-    | TRAILING      { emit("INT 2"); }
-    | BOTH          { emit("INT 3"); }
-    ;
-
-expr: FDATE_ADD '(' expr ',' interval_exp ')' { emit("CALL 3 DATE_ADD"); }
-    | FDATE_SUB '(' expr ',' interval_exp ')' { emit("CALL 3 DATE_SUB"); }
-    ;
-
-interval_exp: INTERVAL expr DAY_HOUR    { emit("NUMBER 1"); }
-    | INTERVAL expr DAY_MICROSECOND     { emit("NUMBER 2"); }
-    | INTERVAL expr DAY_MINUTE          { emit("NUMBER 3"); }
-    | INTERVAL expr DAY_SECOND          { emit("NUMBER 4"); }
-    | INTERVAL expr YEAR_MONTH          { emit("NUMBER 5"); }
-    | INTERVAL expr YEAR                { emit("NUMBER 6"); }
-    | INTERVAL expr HOUR_MICROSECOND    { emit("NUMBER 7"); }
-    | INTERVAL expr HOUR_MINUTE         { emit("NUMBER 8"); }
-    | INTERVAL expr HOUR_SECOND         { emit("NUMBER 9"); }
-    ;
-
-expr: CASE expr case_list END           { emit("CASEVAL %d 0", $3); }
-    | CASE expr case_list ELSE expr END { emit("CASEVAL %d 1", $3); }
-    | CASE case_list END                { emit("CASE %d 0", $2); }
-    | CASE case_list ELSE expr END      { emit("CASE %d 1", $2); }
-    ;
-
-case_list: WHEN expr THEN expr      { $$ = 1; }
-    |   case_list WHEN expr THEN expr { $$ = $1+1; }
-    ;
-
-expr: expr LIKE expr        { emit("LIKE"); }
-    | expr NOT LIKE expr    { emit("LIKE"); emit("NOT"); }
-    ;
-
-expr: expr REGEXP expr      { emit("REGEXP"); }
-    | expr NOT REGEXP expr  { emit("REGEXP"); emit("NOT"); }
-    ;
-
-expr: CURRENT_TIMESTAMP     { emit("NOW"); }
-    | CURRENT_DATE	        { emit("NOW"); }
-    | CURRENT_TIME	        { emit("NOW"); }
-    ;
-
-expr: BINARY expr %prec UMINUS { emit("STRTOBIN"); }
-    ;
+/* expr: FCOUNT '(' '*' ')'    { emit("COUNTALL"); } */
+    /* | FCOUNT '(' expr ')'   { emit(" CALL 1 COUNT"); } */
+/*  */
+/* expr: FSUBSTRING '(' val_list ')'                   { emit("CALL %d SUBSTR", $3); } */
+    /* | FSUBSTRING '(' expr FROM expr ')'             { emit("CALL 2 SUBSTR"); } */
+    /* | FSUBSTRING '(' expr FROM expr FOR expr ')'    { emit("CALL 3 SUBSTR"); } */
+    /* | FTRIM '(' val_list ')'                        { emit("CALL %d TRIM", $3); } */
+    /* | FTRIM '(' trim_ltb expr FROM val_list ')'     { emit("CALL 3 TRIM"); } */
+    /* ; */
+/*  */
+/* trim_ltb: LEADING   { emit("INT 1"); } */
+    /* | TRAILING      { emit("INT 2"); } */
+    /* | BOTH          { emit("INT 3"); } */
+    /* ; */
+/*  */
+/* expr: FDATE_ADD '(' expr ',' interval_exp ')' { emit("CALL 3 DATE_ADD"); } */
+    /* | FDATE_SUB '(' expr ',' interval_exp ')' { emit("CALL 3 DATE_SUB"); } */
+    /* ; */
+/*  */
+/* interval_exp: INTERVAL expr DAY_HOUR    { emit("NUMBER 1"); } */
+    /* | INTERVAL expr DAY_MICROSECOND     { emit("NUMBER 2"); } */
+    /* | INTERVAL expr DAY_MINUTE          { emit("NUMBER 3"); } */
+    /* | INTERVAL expr DAY_SECOND          { emit("NUMBER 4"); } */
+    /* | INTERVAL expr YEAR_MONTH          { emit("NUMBER 5"); } */
+    /* | INTERVAL expr YEAR                { emit("NUMBER 6"); } */
+    /* | INTERVAL expr HOUR_MICROSECOND    { emit("NUMBER 7"); } */
+    /* | INTERVAL expr HOUR_MINUTE         { emit("NUMBER 8"); } */
+    /* | INTERVAL expr HOUR_SECOND         { emit("NUMBER 9"); } */
+    /* ; */
+/*  */
+/* expr: CASE expr case_list END           { emit("CASEVAL %d 0", $3); } */
+    /* | CASE expr case_list ELSE expr END { emit("CASEVAL %d 1", $3); } */
+    /* | CASE case_list END                { emit("CASE %d 0", $2); } */
+    /* | CASE case_list ELSE expr END      { emit("CASE %d 1", $2); } */
+    /* ; */
+/*  */
+/* case_list: WHEN expr THEN expr      { $$ = 1; } */
+    /* |   case_list WHEN expr THEN expr { $$ = $1+1; } */
+    /* ; */
+/*  */
+/* expr: expr LIKE expr        { emit("LIKE"); } */
+    /* | expr NOT LIKE expr    { emit("LIKE"); emit("NOT"); } */
+    /* ; */
+/*  */
+/* expr: expr REGEXP expr      { emit("REGEXP"); } */
+    /* | expr NOT REGEXP expr  { emit("REGEXP"); emit("NOT"); } */
+    /* ; */
+/*  */
+/* expr: CURRENT_TIMESTAMP     { emit("NOW"); } */
+    /* | CURRENT_DATE	        { emit("NOW"); } */
+    /* | CURRENT_TIME	        { emit("NOW"); } */
+    /* ; */
+/*  */
+/* expr: BINARY expr %prec UMINUS { emit("STRTOBIN"); } */
+    /* ; */
 
 %%
 

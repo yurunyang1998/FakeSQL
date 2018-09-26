@@ -79,6 +79,19 @@ ast_node_atom *new_atom_node(enum atom_types type, void *v)
     return node;
 }
 
+
+ast_node_sexp *add_atom_node_to(ast_node_sexp *_node, ast_node_atom *_item)
+{
+    ast_node_sexp *_next = (ast_node_sexp *)malloc(sizeof(ast_node_sexp));
+    bzero(_next, sizeof(ast_node_sexp));
+    _next->type = ST_NONE;
+    _node->type = ST_LIST;
+
+    _node->value.atom = _item;
+    _node->next = _item;
+    _next->next = NULL;
+}
+
 void delete_atom_node(ast_node_atom* node)
 {
     switch(node->type) {
