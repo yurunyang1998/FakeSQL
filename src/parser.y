@@ -407,9 +407,8 @@ stmt: create_table_stmt { mod->root = $1; }
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
             {
-                ast_node_sexp *root, tmp;
+                ast_node_sexp *root, *tmp;
                 tmp = new_sexp_node(ST_ATOM, $5);
-                // TODO: implement another function which can add node of `atom' to the structure `sexp'
                 ast_node_atom *_item = new_atom_node(AT_STRING, (void *)$7);
                 add_node_atom_to(root, _item);
                 $$ = root;

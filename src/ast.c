@@ -80,7 +80,7 @@ ast_node_atom *new_atom_node(enum atom_types type, void *v)
 }
 
 
-ast_node_sexp *add_atom_node_to(ast_node_sexp *_node, ast_node_atom *_item)
+void add_atom_to_sexp(ast_node_sexp *_node, ast_node_atom *_item)
 {
     ast_node_sexp *_next = (ast_node_sexp *)malloc(sizeof(ast_node_sexp));
     bzero(_next, sizeof(ast_node_sexp));
@@ -88,7 +88,7 @@ ast_node_sexp *add_atom_node_to(ast_node_sexp *_node, ast_node_atom *_item)
     _node->type = ST_LIST;
 
     _node->value.atom = _item;
-    _node->next = _item;
+    _node->next = _next;
     _next->next = NULL;
 }
 
@@ -128,14 +128,19 @@ ast_node_sexp *new_sexp_node(enum sexp_types type, void *v)
 {
     ast_node_sexp *node = (ast_node_sexp *)malloc(sizeof(ast_node_sexp));
     node->type = type;
+    node->next = NULL;
 
     switch(type) {
-    case ST_ATOM:
-        node->value.atom = (ast_node_atom*) v;
-        break;
-    case ST_LIST:
-        node->value.list = (ast_node_list*) v;
-        break;
+        case ST_ATOM:
+            node->value.atom = (ast_node_atom*) v;
+            break;
+        case ST_LIST:
+            node->value.list = (ast_node_list*) v;
+            break;
+        case ST_NONE:
+            node->value = NULL;
+            break;
+
     }
     return node;
 }
