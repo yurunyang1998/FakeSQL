@@ -3,6 +3,7 @@ project(FakeSQL)
 
 ADD_SUBDIRECTORY(src bin)
 ADD_SUBDIRECTORY(tmp_engine)
+ADD_SUBDIRECTORY(test)
 
 set(CMAKE_CXX_STANDARD 11)
 

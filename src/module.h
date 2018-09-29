@@ -21,7 +21,8 @@ typedef struct {
         int fileno;
     } src;
 
-    ast_node_sexp* root;
+    ast_node_sexp* node;
+    struct _oprt_node *root;
 } module;
 
 

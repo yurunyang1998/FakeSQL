@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+#include <strings.h>
 
 enum atom_types
 {
@@ -113,12 +114,9 @@ struct _ast_node_opts
     } value;
 };
 
-ast_node_opts *
-new_opts_node(enum opts_types type, void *v);
-void
-delete_opts_node(ast_node_opts *node);
-void
-add_opts_node_to_list(ast_node_list *list, ast_node_opts *node);
+ast_node_opts * new_opts_node(enum opts_types type, void *v);
+void delete_opts_node(ast_node_opts *node);
+void add_opts_node_to_list(ast_node_list *list, ast_node_opts *node);
 
 
 // ---------- this following structure will be used as operator such as `SELECT', `CREATE', `INSERT' etc. -------
@@ -131,6 +129,8 @@ enum oprt_type
 struct _tabl_list;
 struct _tabl_name_list;
 struct _kv_pair;
+struct _sql_opts;
+
 
 struct _oprt_node
 {
@@ -144,7 +144,7 @@ struct _oprt_node
     
     union
     {
-        struct _tabl_name_list *tabl_name_list_;
+        struct _tabl_name_list *table_name_list_;
         struct kv_pair *kv_list_;
     } universal_list_;
     
@@ -155,36 +155,50 @@ struct _oprt_node
  * The whole logical relation of the `oprt_node' struct should probably be the following.
  * Each of the three children of the `operator' will be a structure, and the `options' node
  * may NOT exist.
- *                     ,____.
+ *                    ,------.
  *                    | root |
  *                    `------'
  *                       |
- *                   ,________.
+ *                  ,----------.
  *                  | operator |
- *                 ,`---------'.
- *        ,______,'      |      `---------.
- *   ,_______.   ,_______________.   ,_________.
- *  | options | | name_table list | | name list |
- *  `---------' `-----------------' `-----------'
+ *                 ,`----------'.
+ *        ,______,'      |       `---------.
+ *  ,---------. ,-----------------.  ,-----------.
+ *  | options | | name_table list |  | name list |
+ *  `---------' `-----------------'  `-----------'
  */
 
 
-// TODO: accomplish the follows structures.
-struct kv_pair {
-
+// linked list is easy to implement. at the same time it's useful.
+struct _kv_pair {
+    char *first;
+    char *second;
+    struct _kv_pair *next;
 };
 
 struct _tabl_name_list {
-
+    char *tabl_ref;
+    struct _tabl_name_list *next;
 };
 
 
 struct _tabl_list {
-    char *frist_;
-    char *second;
+    struct {
+        // The `name' MUST be set, and the `sub_columns' may point the null.
+        char *name;
+        char *sub_columns;
+    } tabl_ref;
     struct _tabl_list *next;
 };
 
+
+struct _sql_opts {
+    char *test;
+};
+
+struct _oprt_node *new_oprt_node(enum oprt_type type);
+
+struct _tabl_name_list *new_tablNameList_node(char *ref);
 
 #ifdef __cplusplus
 }

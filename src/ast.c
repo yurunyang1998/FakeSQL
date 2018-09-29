@@ -137,9 +137,6 @@ ast_node_sexp *new_sexp_node(enum sexp_types type, void *v)
         case ST_LIST:
             node->value.list = (ast_node_list*) v;
             break;
-        case ST_NONE:
-            node->value = NULL;
-            break;
 
     }
     return node;
@@ -210,6 +207,26 @@ void delete_opts_node(ast_node_opts *node)
 }
 
 
+// ----------------- added on ---------------------
+
+struct _oprt_node *new_oprt_node(enum oprt_type type)
+{
+    struct _oprt_node *root = (struct _oprt_node *)malloc(sizeof(struct _oprt_node));
+    
+    bzero(root, sizeof(struct _oprt_node));
+    root->type_ = type;
+    return root;
+}
+
+
+struct _tabl_name_list *new_tablNameList_node(char *ref)
+{
+    struct _tabl_name_list *tmp = (struct _tabl_name_list *)malloc(sizeof(struct _tabl_name_list));
+    
+    strncpy(tmp->tabl_ref, ref, strlen(ref));
+    tmp->next = NULL;
+    return tmp;
+}
 
 #ifdef __cplusplus
 }
