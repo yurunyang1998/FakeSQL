@@ -9,12 +9,15 @@
 # include <cstdio>
 # include <cstdlib>
 # include <cstring>
+# include <cassert>
 
 extern "C" {
 #else
 # include <stdlib.h>
 # include <string.h>
 # include <stdio.h>
+# include <assert.h>
+
 #endif
 
 ast_node_list* new_list_node()
@@ -212,21 +215,75 @@ void delete_opts_node(ast_node_opts *node)
 struct _oprt_node *new_oprt_node(enum oprt_type type)
 {
     struct _oprt_node *root = (struct _oprt_node *)malloc(sizeof(struct _oprt_node));
+    assert(root != NULL);
     
     bzero(root, sizeof(struct _oprt_node));
     root->type_ = type;
     return root;
 }
 
+void delete_oprt_node(struct _oprt_node *node)
+{
+    assert(node != NULL);
+
+    delete_tablNameList_node(node->table_);
+    switch(node->type_) {
+    case CREATE:
+        delete_kvPair_node((struct _kv_pair *) node->universal_list_.kv_list_);
+        break;
+    case INSERT:
+        delete_tablNameList_node(node->universal_list_.table_name_list_);
+        break;
+    default:
+        // mei xiang hao
+        break;
+    }
+}
+
+
+struct _tabl_list *new_tabl_list(char *ref)
+{
+    struct _tabl_list *list = (struct _tabl_list *)malloc(sizeof(struct _tabl_list));
+    assert(list != NULL);
+}
+
 
 struct _tabl_name_list *new_tablNameList_node(char *ref)
 {
     struct _tabl_name_list *tmp = (struct _tabl_name_list *)malloc(sizeof(struct _tabl_name_list));
-    
+    assert(tmp != NULL);
+    assert(ref != NULL);
+
     strncpy(tmp->tabl_ref, ref, strlen(ref));
     tmp->next = NULL;
     return tmp;
 }
+
+void delete_tablNameList_node(struct _tabl_name_list *node)
+{
+    assert(node != NULL);
+
+}
+
+
+struct _kv_pair *new_kvPair_node(char *key, char *value)
+{
+    struct _kv_pair *tmp = (struct _kv_pair *)malloc(sizeof(struct _kv_pair));
+    assert(tmp != NULL);
+
+    bzero(tmp, sizeof(struct _kv_pair));
+    strncpy(tmp->first, key, strlen(key));
+    strncpy(tmp->second, value, strlen(value));
+
+    tmp->next = NULL;
+    return tmp;
+}
+
+void delete_kvPair_node(struct _kv_pair *kv)
+{
+    assert(kv != NULL);
+}
+
 
 #ifdef __cplusplus
 }

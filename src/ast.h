@@ -171,13 +171,13 @@ struct _oprt_node
 
 // linked list is easy to implement. at the same time it's useful.
 struct _kv_pair {
-    char *first;
-    char *second;
+    char first[32];
+    char second[32];
     struct _kv_pair *next;
 };
 
 struct _tabl_name_list {
-    char *tabl_ref;
+    char tabl_ref[32];
     struct _tabl_name_list *next;
 };
 
@@ -185,20 +185,28 @@ struct _tabl_name_list {
 struct _tabl_list {
     struct {
         // The `name' MUST be set, and the `sub_columns' may point the null.
-        char *name;
-        char *sub_columns;
+        char name[32];
+        char sub_columns[32];
     } tabl_ref;
     struct _tabl_list *next;
 };
 
 
 struct _sql_opts {
-    char *test;
+    char test[32];
 };
 
+struct _tabl_list *new_tabl_list(char *ref);
+void delete_tabl_list(struct _tabl_list *list);
+
 struct _oprt_node *new_oprt_node(enum oprt_type type);
+void delete_oprt_node(struct _oprt_node *node);
 
 struct _tabl_name_list *new_tablNameList_node(char *ref);
+void delete_tablNameList_node(struct _tabl_name_list *node);
+
+struct _kv_pair *new_kvPair_node(char *key, char *value);
+void delete_kvPair_node(struct _kv_pair *kv);
 
 #ifdef __cplusplus
 }
