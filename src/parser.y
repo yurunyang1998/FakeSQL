@@ -391,8 +391,9 @@ void yyerror(const char *s, ...);
 %type <intval> column_atts data_type opt_ignore_replace create_col_list
 */
 
-%type <ast_node_sexp*> create_table_stmt
-
+%type <struct _oprt_node*> create_table_stmt
+%type <struct _kv_pair *> create_col_list
+%type <columns_list *> column_list
 %start stmt_list
 
 %%
@@ -407,6 +408,11 @@ stmt: create_table_stmt { mod->root = $1; }
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
             {
+                struct _oprt_node *root = new_oprt_node(TS_CREATE);
+                struct _tabl_list *table = new_tabl_list($5, NULL);
+                struct _kv_pair *kv = $7;
+                root->table_ = table;
+
                 ast_node_sexp *root, *tmp;
                 tmp = new_sexp_node(ST_ATOM, $5);
                 ast_node_atom *_item = new_atom_node(AT_STRING, (void *)$7);
@@ -440,7 +446,7 @@ create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME cr
             { emit("CREATESELECT %d %d 0 %s.%s", $2, $4, $5, $7); free($5); free($7); }
     ;
 
-create_col_list: create_definition  { $$ = 1; }
+create_col_list: create_definition  { $$ = $1; }
     | create_col_list ',' create_definition { $$ = $1 + 1; }
     ;
 
@@ -584,11 +590,23 @@ opt_temporary:   /* nil */ { $$ = 0; }
 /* opt_into_list: [> nil <]  */
     /* | INTO column_list  { emit("INTO %d", $2); } */
     /* ; */
-/*  */
-/* column_list: NAME           { emit("COLUMN %s", $1); free($1); $$ = 1; } */
-    /* | column_list ',' NAME  { emit("COLUMN %s", $3); free($3); $$ = $1 + 1; } */
-    /* ; */
-/*  */
+
+column_list: NAME
+            {
+                columns_list_t *list = new_NameList_node($1);
+                free($1);
+                $$ = list;
+            }
+             column_list ',' NAME
+            {
+                columns_list_t *list = new_NameList_node($3);
+                list->next = $1->next;
+                $1->next = list;
+                free($3);
+                $$ = $1;
+            }
+    ;
+
 /* select_opts:                          { $$ = 0; } */
     /* | select_opts ALL                 { if($$ & 01) yyerror("duplicate ALL option"); $$ = $1 | 01; } */
     /* | select_opts DISTINCT            { if($$ & 02) yyerror("duplicate DISTINCT option"); $$ = $1 | 02; } */

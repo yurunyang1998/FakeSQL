@@ -226,13 +226,13 @@ void delete_oprt_node(struct _oprt_node *node)
 {
     assert(node != NULL);
 
-    delete_tablNameList_node(node->table_);
+    del_tabl_list(node->table_);
     switch(node->type_) {
-    case CREATE:
-        delete_kvPair_node((struct _kv_pair *) node->universal_list_.kv_list_);
+    case TS_CREATE:
+        del_kvPair_node((struct _kv_pair *) node->universal_list_.kv_list_);
         break;
-    case INSERT:
-        delete_tablNameList_node(node->universal_list_.table_name_list_);
+    case TS_INSERT:
+        del_NameList_node(node->universal_list_.table_name_list_);
         break;
     default:
         // mei xiang hao
@@ -241,28 +241,69 @@ void delete_oprt_node(struct _oprt_node *node)
 }
 
 
-struct _tabl_list *new_tabl_list(char *ref)
+struct _tabl_list *new_tabl_list(char *ref_fir, char *ref_sec)
 {
     struct _tabl_list *list = (struct _tabl_list *)malloc(sizeof(struct _tabl_list));
     assert(list != NULL);
+
+    bzero(list, sizeof(struct _tabl_list));
+    assert(ref_fir != NULL);
+    strncpy(list->tabl_ref.name, ref_fir, strlen(ref_fir));
+    if(ref_sec != NULL) {
+        strncpy(list->tabl_ref.sub_columns, ref_sec, strlen((ref_sec)));
+    }
+
+    list->next = NULL;
+    return list;
+}
+
+void add_tabl_list(struct _tabl_list *head, char *ref)
+{
+
+}
+
+void del_tabl_list(struct _tabl_list *list)
+{
+    assert(list != NULL);
+
+    struct _tabl_list *head = list->next;
+
+    while(head != NULL) {
+        free(list);
+        list = head;
+
+        head = head->next;
+    }
 }
 
 
-struct _tabl_name_list *new_tablNameList_node(char *ref)
+columns_list_t *new_NameList_node(char *ref)
 {
-    struct _tabl_name_list *tmp = (struct _tabl_name_list *)malloc(sizeof(struct _tabl_name_list));
+    struct _name_list *tmp = (struct _name_list *)malloc(sizeof(struct _name_list));
     assert(tmp != NULL);
     assert(ref != NULL);
 
-    strncpy(tmp->tabl_ref, ref, strlen(ref));
+    strncpy(tmp->_ref, ref, strlen(ref));
     tmp->next = NULL;
     return tmp;
 }
 
-void delete_tablNameList_node(struct _tabl_name_list *node)
+void add_NameList_node(columns_list_t *head, const char *ref)
+{
+
+}
+
+void del_NameList_node(columns_list_t *node)
 {
     assert(node != NULL);
+    struct _name_list *head = node->next;
 
+    while(head != NULL) {
+        free(node);
+        node = head;
+
+        head = head->next;
+    }
 }
 
 
@@ -279,9 +320,29 @@ struct _kv_pair *new_kvPair_node(char *key, char *value)
     return tmp;
 }
 
-void delete_kvPair_node(struct _kv_pair *kv)
+void add_kvPair_node(struct _kv_pair *list, char *key, char *value)
+{
+    assert(list != NULL);
+    struct _kv_pair *tmp = (struct _kv_pair *)malloc(sizeof(struct _kv_pair));
+
+    strncpy(tmp->first, key, strlen(key));
+    strncpy(tmp->second, value, strlen(value));
+
+    tmp->next = list->next;
+    list->next = tmp;
+}
+
+void del_kvPair_node(struct _kv_pair *kv)
 {
     assert(kv != NULL);
+
+    struct _kv_pair *head = kv->next;
+    while(head != NULL) {
+        free(kv);
+        kv = head;
+
+        head = head->next;
+    }
 }
 
 

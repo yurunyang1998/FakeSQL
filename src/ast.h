@@ -123,11 +123,11 @@ void add_opts_node_to_list(ast_node_list *list, ast_node_opts *node);
 
 enum oprt_type
 {
-    CREATE, INSERT
+    TS_CREATE, TS_INSERT, TS_SELECT, TS_DELETE
 };
 
 struct _tabl_list;
-struct _tabl_name_list;
+struct _name_list;
 struct _kv_pair;
 struct _sql_opts;
 
@@ -144,7 +144,7 @@ struct _oprt_node
     
     union
     {
-        struct _tabl_name_list *table_name_list_;
+        struct _name_list *table_name_list_;
         struct kv_pair *kv_list_;
     } universal_list_;
     
@@ -176,9 +176,9 @@ struct _kv_pair {
     struct _kv_pair *next;
 };
 
-struct _tabl_name_list {
-    char tabl_ref[32];
-    struct _tabl_name_list *next;
+struct _name_list {
+    char _ref[32];
+    struct _name_list *next;
 };
 
 
@@ -196,17 +196,24 @@ struct _sql_opts {
     char test[32];
 };
 
-struct _tabl_list *new_tabl_list(char *ref);
-void delete_tabl_list(struct _tabl_list *list);
+// alias...
+typedef struct _name_list columns_list_t;
+
+// 如果`ref_sec' 没有参数,直接将它设置味 `NULL' 就好
+struct _tabl_list *new_tabl_list(char *ref_fir, char *ref_sec);
+void add_tabl_list(struct _tabl_list *head, char *ref);
+void del_tabl_list(struct _tabl_list *list);
 
 struct _oprt_node *new_oprt_node(enum oprt_type type);
-void delete_oprt_node(struct _oprt_node *node);
+void del_oprt_node(struct _oprt_node *node);
 
-struct _tabl_name_list *new_tablNameList_node(char *ref);
-void delete_tablNameList_node(struct _tabl_name_list *node);
+columns_list_t *new_NameList_node(char *ref);
+void add_NameList_node(columns_list_t *head, const char *ref);
+void del_NameList_node(columns_list_t *node);
 
 struct _kv_pair *new_kvPair_node(char *key, char *value);
-void delete_kvPair_node(struct _kv_pair *kv);
+void add_kvPair_node(struct _kv_pair *list, char *key, char *value);
+void del_kvPair_node(struct _kv_pair *kv);
 
 #ifdef __cplusplus
 }
