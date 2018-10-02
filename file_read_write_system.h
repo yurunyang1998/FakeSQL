@@ -17,7 +17,7 @@ namespace utils
     {
     private:
        std::fstream  thefile;
-
+        
     public:
         basic_read_write(char *datafile);
         int insert_value(std::string value);
