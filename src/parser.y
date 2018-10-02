@@ -391,9 +391,10 @@ void yyerror(const char *s, ...);
 %type <intval> column_atts data_type opt_ignore_replace create_col_list
 */
 
-%type <struct _oprt_node*> create_table_stmt
+%type <struct _OprtNode*> create_table_stmt
 %type <struct _kv_pair *> create_col_list
 %type <columns_list *> column_list
+
 %start stmt_list
 
 %%
@@ -408,15 +409,11 @@ stmt: create_table_stmt { mod->root = $1; }
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
             {
-                struct _oprt_node *root = new_oprt_node(TS_CREATE);
-                struct _tabl_list *table = new_tabl_list($5, NULL);
+                struct _OprtNode *root = new_oprt_node(TS_CREATE);
+                struct _TablList *table = new_tabl_list($5, NULL);
                 struct _kv_pair *kv = $7;
                 root->table_ = table;
 
-                ast_node_sexp *root, *tmp;
-                tmp = new_sexp_node(ST_ATOM, $5);
-                ast_node_atom *_item = new_atom_node(AT_STRING, (void *)$7);
-                add_node_atom_to(root, _item);
                 $$ = root;
                 emit("CREATE %d %d %d %s", $2, $4, $7, $5);
                 free($5);
@@ -454,23 +451,17 @@ create_definition: { emit("STARTCOL"); } NAME data_type column_atts { emit("COLU
     | PRIMARY KEY '(' column_list ')'    { emit("PRIKEY %d", $4); }
     | KEY '(' column_list ')'            { emit("KEY %d", $3); }
     | INDEX '(' column_list ')'          { emit("KEY %d", $3); }
-    | FULLTEXT INDEX '(' column_list ')' { emit("TEXTINDEX %d", $4); }
-    | FULLTEXT KEY '(' column_list ')'   { emit("TEXTINDEX %d", $4); }
     ;
 
 column_atts: /* nil */ { $$ = 0; }
     | column_atts NOT NULLX             { emit("ATTR NOTNULL"); $$ = $1 + 1; }
-    | column_atts NULLX
     | column_atts DEFAULT STRING        { emit("ATTR DEFAULT STRING %s", $3); free($3); $$ = $1 + 1; }
     | column_atts DEFAULT INTNUM        { emit("ATTR DEFAULT NUMBER %d", $3); $$ = $1 + 1; }
-    | column_atts DEFAULT APPROXNUM     { emit("ATTR DEFAULT FLOAT %g", $3); $$ = $1 + 1; }
     | column_atts DEFAULT BOOL          { emit("ATTR DEFAULT BOOL %d", $3); $$ = $1 + 1; }
     | column_atts AUTO_INCREMENT        { emit("ATTR AUTOINC"); $$ = $1 + 1; }
-    | column_atts UNIQUE '(' column_list ')' { emit("ATTR UNIQUEKEY %d", $4); $$ = $1 + 1; }
     | column_atts UNIQUE KEY            { emit("ATTR UNIQUEKEY"); $$ = $1 + 1; }
     | column_atts PRIMARY KEY           { emit("ATTR PRIKEY"); $$ = $1 + 1; }
     | column_atts KEY                   { emit("ATTR PRIKEY"); $$ = $1 + 1; }
-    | column_atts COMMENT STRING        { emit("ATTR COMMENT %s", $3); free($3); $$ = $1 + 1; }
     ;
 
 opt_length: /* nil */   { $$ = 0; }

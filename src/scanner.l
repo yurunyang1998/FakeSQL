@@ -324,7 +324,7 @@ DATE_ADD/"("        { return FDATE_ADD; }
 DATE_SUB/"("        { return FDATE_SUB; }
 
 	/*
-         * peek ahead and return function if name(
+         * peek ahead and return function if name_(
          */
  /*
 COUNT                   { int c = input(); unput(c);
@@ -338,7 +338,7 @@ COUNT                   { int c = input(); unput(c);
                           yylval->strval[yyleng-2] = 0;
                           return NAME; }
 
-`[^`\n]*$               { yyerror("unterminated quoted name %s", yytext); }
+`[^`\n]*$               { yyerror("unterminated quoted name_ %s", yytext); }
 
 	/* user variables */
 @[0-9a-z_.$]+ |

@@ -22,7 +22,7 @@ typedef struct {
     } src;
 
     ast_node_sexp* node;
-    struct _oprt_node *root;
+    struct _OprtNode *root;
 } module;
 
 

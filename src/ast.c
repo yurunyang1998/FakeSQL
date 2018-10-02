@@ -20,46 +20,6 @@ extern "C" {
 
 #endif
 
-ast_node_list* new_list_node()
-{
-    ast_node_list *node = (ast_node_list*) malloc(sizeof(ast_node_list));
-    node->length = 0;
-    node->capacity = 16;
-    node->list = (ast_node_sexp **)malloc(16 * sizeof(ast_node_sexp *));
-    node->opts = (ast_node_opts **)malloc(16 * sizeof(ast_node_opts *));
-
-    return node;
-}
-
-void delete_list_node(ast_node_list* node)
-{
-    int i;
-    for(i = 0; i < node->length; i++) {
-        delete_sexp_node(node->list[i]);
-        delete_opts_node(node->opts[i]);
-    }
-    free(node->list);
-    free(node->opts);
-    free(node);
-}
-
-void add_node_to_list(ast_node_list *list, ast_node_sexp *node)
-{
-    if(list->length == list->capacity) {
-        // TODO should allocate some more space
-    }
-    list->list[list->length] = node;
-    list->length++;
-}
-
-void print_node_list(ast_node_list* node)
-{
-    int i = 0;
-    printf("list node with %d elements\n", node->length);
-    for(i = 0; i < node->length; i++) {
-        print_node_sexp(node->list[i]);
-    }
-}
 
 ast_node_atom *new_atom_node(enum atom_types type, void *v)
 {
@@ -137,9 +97,6 @@ ast_node_sexp *new_sexp_node(enum sexp_types type, void *v)
         case ST_ATOM:
             node->value.atom = (ast_node_atom*) v;
             break;
-        case ST_LIST:
-            node->value.list = (ast_node_list*) v;
-            break;
 
     }
     return node;
@@ -151,9 +108,6 @@ void delete_sexp_node(ast_node_sexp *node)
     case ST_ATOM:
         delete_atom_node(node->value.atom);
         break;
-    case ST_LIST:
-        delete_list_node(node->value.list);
-        break;
     }
     free(node);
 }
@@ -163,10 +117,6 @@ void print_node_sexp(ast_node_sexp *node)
     if(node->type == ST_ATOM) {
         printf("node is an atom: ");
         print_node_atom(node->value.atom);
-    }
-    else if(node->type == ST_LIST) {
-        printf("node is a list\n");
-        print_node_list(node->value.list);
     }
     else {
         printf("node is a what?\n");
@@ -193,15 +143,9 @@ void delete_opts_node(ast_node_opts *node)
         break;
     case OP_GROUPBY:
         break;
-    case OP_INTO_LIST:
-        delete_list_node(node->value.list);
-        break;
     case OP_LIMIT:
         break;
     case OP_ORDERBY:
-        break;
-    case OP_SELECT:
-        delete_list_node(node->value.list);
         break;
     case OP_WHERE:
         break;
@@ -212,27 +156,27 @@ void delete_opts_node(ast_node_opts *node)
 
 // ----------------- added on ---------------------
 
-struct _oprt_node *new_oprt_node(enum oprt_type type)
+struct _OprtNode *new_oprt_node(enum OprtType type)
 {
-    struct _oprt_node *root = (struct _oprt_node *)malloc(sizeof(struct _oprt_node));
+    struct _OprtNode *root = (struct _OprtNode *)malloc(sizeof(struct _OprtNode));
     assert(root != NULL);
     
-    bzero(root, sizeof(struct _oprt_node));
+    bzero(root, sizeof(struct _OprtNode));
     root->type_ = type;
     return root;
 }
 
-void delete_oprt_node(struct _oprt_node *node)
+void delete_oprt_node(struct _OprtNode *node)
 {
     assert(node != NULL);
 
     del_tabl_list(node->table_);
     switch(node->type_) {
     case TS_CREATE:
-        del_kvPair_node((struct _kv_pair *) node->universal_list_.kv_list_);
+        del_DefOpts_node(node->universalList_.defOpts_);
         break;
     case TS_INSERT:
-        del_NameList_node(node->universal_list_.table_name_list_);
+        del_NameList_node(node->universalList_.tableNameList_);
         break;
     default:
         // mei xiang hao
@@ -241,32 +185,32 @@ void delete_oprt_node(struct _oprt_node *node)
 }
 
 
-struct _tabl_list *new_tabl_list(char *ref_fir, char *ref_sec)
+struct _TablList *new_tabl_list(char *ref_fir, char *ref_sec)
 {
-    struct _tabl_list *list = (struct _tabl_list *)malloc(sizeof(struct _tabl_list));
+    struct _TablList *list = (struct _TablList *)malloc(sizeof(struct _TablList));
     assert(list != NULL);
 
-    bzero(list, sizeof(struct _tabl_list));
+    bzero(list, sizeof(struct _TablList));
     assert(ref_fir != NULL);
-    strncpy(list->tabl_ref.name, ref_fir, strlen(ref_fir));
+    strncpy(list->_TablRef.name_, ref_fir, strlen(ref_fir));
     if(ref_sec != NULL) {
-        strncpy(list->tabl_ref.sub_columns, ref_sec, strlen((ref_sec)));
+        strncpy(list->_TablRef.subColumns_, ref_sec, strlen((ref_sec)));
     }
 
     list->next = NULL;
     return list;
 }
 
-void add_tabl_list(struct _tabl_list *head, char *ref)
+void add_tabl_list(struct _TablList *head, char *ref)
 {
 
 }
 
-void del_tabl_list(struct _tabl_list *list)
+void del_tabl_list(struct _TablList *list)
 {
     assert(list != NULL);
 
-    struct _tabl_list *head = list->next;
+    struct _TablList *head = list->next;
 
     while(head != NULL) {
         free(list);
@@ -279,11 +223,11 @@ void del_tabl_list(struct _tabl_list *list)
 
 columns_list_t *new_NameList_node(char *ref)
 {
-    struct _name_list *tmp = (struct _name_list *)malloc(sizeof(struct _name_list));
+    struct _NameList *tmp = (struct _NameList *)malloc(sizeof(struct _NameList));
     assert(tmp != NULL);
     assert(ref != NULL);
 
-    strncpy(tmp->_ref, ref, strlen(ref));
+    strncpy(tmp->ref_, ref, strlen(ref));
     tmp->next = NULL;
     return tmp;
 }
@@ -296,7 +240,7 @@ void add_NameList_node(columns_list_t *head, const char *ref)
 void del_NameList_node(columns_list_t *node)
 {
     assert(node != NULL);
-    struct _name_list *head = node->next;
+    struct _NameList *head = node->next;
 
     while(head != NULL) {
         free(node);
@@ -313,8 +257,8 @@ struct _kv_pair *new_kvPair_node(char *key, char *value)
     assert(tmp != NULL);
 
     bzero(tmp, sizeof(struct _kv_pair));
-    strncpy(tmp->first, key, strlen(key));
-    strncpy(tmp->second, value, strlen(value));
+    strncpy(tmp->first_, key, strlen(key));
+    strncpy(tmp->second_, value, strlen(value));
 
     tmp->next = NULL;
     return tmp;
@@ -325,8 +269,8 @@ void add_kvPair_node(struct _kv_pair *list, char *key, char *value)
     assert(list != NULL);
     struct _kv_pair *tmp = (struct _kv_pair *)malloc(sizeof(struct _kv_pair));
 
-    strncpy(tmp->first, key, strlen(key));
-    strncpy(tmp->second, value, strlen(value));
+    strncpy(tmp->first_, key, strlen(key));
+    strncpy(tmp->second_, value, strlen(value));
 
     tmp->next = list->next;
     list->next = tmp;
@@ -345,6 +289,22 @@ void del_kvPair_node(struct _kv_pair *kv)
     }
 }
 
+struct _DefOpts *new_DefOpts_node(enum DefType type)
+{
+    struct _DefOpts *node = (struct _DefOpts *)malloc(sizeof(struct _DefOpts));
+
+    bzero(node, sizeof(struct _DefOpts));
+    node->kvPair_ = NULL;
+    return node;
+}
+
+void del_DefOpts_node(struct _DefOpts *node)
+{
+    assert(node != NULL);
+
+    del_kvPair_node(node->kvPair_);
+    free(node);
+}
 
 #ifdef __cplusplus
 }

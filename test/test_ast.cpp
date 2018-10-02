@@ -5,12 +5,11 @@
 #include <cstdlib>
 #include "ast.h"
 #include <iostream>
-#include <ast.h>
 
 // TODO: Implementing the unit testint of the `ast.h' file.
 // unit test should be added below.
 
-void print_OprtInfo(const struct _oprt_node *ref)
+void print_OprtInfo(const struct _OprtNode *ref)
 {
     switch (ref->type_) {
         case TS_CREATE:
@@ -28,7 +27,7 @@ void print_kv(const struct _kv_pair *head)
     const struct _kv_pair *tmp = head;
 
     while(tmp != NULL) {
-        std::cout << "key: " << tmp->first << "   value: " << tmp->second << std::endl;
+        std::cout << "key: " << tmp->first_ << "   value: " << tmp->second_ << std::endl;
         tmp = tmp->next;
     }
 
@@ -36,9 +35,9 @@ void print_kv(const struct _kv_pair *head)
 
 int main()
 {
-    struct _oprt_node *head = new_oprt_node(TS_CREATE);
+    struct _OprtNode *head = new_oprt_node(TS_CREATE);
     columns_list_t *list = new_NameList_node(const_cast<char *>("test"));
-    head->universal_list_.table_name_list_ = list;
+    head->universalList_.tableNameList_ = list;
 
     struct _kv_pair *kv = new_kvPair_node(const_cast<char *>("test"), const_cast<char *>("test"));
     add_kvPair_node(kv, const_cast<char *>("key"), const_cast<char *>("test"));

@@ -12,7 +12,6 @@
  *      5. 还没想好,以后再说
  *
  * 2, 3规定只针对`struct' or `class' 的变量
- * 手动 @yurunyang1998
  */
 
 
@@ -42,6 +41,12 @@ struct _ColAttr {
 
     // 这个能不能为空
     bool isAbleNull_;
+
+    // 自动增加
+    bool isAutoInc_;
+
+    // 不知道什么用的index
+    bool isIndex_;
 };
 
 
@@ -60,6 +65,9 @@ struct ColumnsName {
     struct _ColType colType_;
 
     struct _ColAttr colAttr_;
+
+    // the value....
+    std::string colVal_;
 };
 
 struct SqlOptions {
@@ -72,7 +80,7 @@ struct _HyperfineStructure
      * 但他们不是简单的直接这样使用,它们在枚举里面的名字是有TS前缀的...比如`TS_SELECT'. `TS_CREATE'
      * `TS' 前缀意思是 test, 没啥特别含义...后面可能会改掉..
      */
-    enum oprt_type opType_;
+    enum OprtType opType_;
 
     // 表名, 数据库名字直接给你应该就好了.这个没有什么特别的讲究,
     std::vector<struct TableName> tableListRef_;
