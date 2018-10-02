@@ -8,6 +8,9 @@
 
 #include <ios>
 #include <fstream>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <iostream>
 namespace utils
 {
 
@@ -16,12 +19,14 @@ namespace utils
     class basic_read_write
     {
     private:
-       std::fstream  thefile;
-        
+
+        int fd;
+        char wtdhbw; //whether the datafile has been writen
+
+
     public:
-        basic_read_write(char *datafile);
-        int insert_value(std::string value);
-        void read_value();
+        basic_read_write(char * namepath);
+
     };
 }
 

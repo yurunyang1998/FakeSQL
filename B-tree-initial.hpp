@@ -8,6 +8,9 @@
 #include "B-tree_nodes.hpp"
 #include "iostream"
 #include "string"
+#include "hyperfine_structure.cpp"
+#include "bson_.h"
+#include <bson_.h>
 namespace  utils {
 
 
@@ -25,6 +28,7 @@ namespace  utils {
             root = initial_B_tree(key);
             root->set_manager(this);
         }
+
 
         void update_root(middle_node<key_type,value_type> * newroot)
         {
@@ -193,6 +197,14 @@ namespace  utils {
             }
 
         }
+
+
+        int insert_Into_Bson(Quantum::HyfineStruct_t * hy_p)
+        {
+            bson_::create_bson_couple  bson_couple;
+
+        }
+
 
     };
 

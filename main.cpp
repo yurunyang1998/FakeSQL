@@ -5,22 +5,71 @@
 #include "B-tree-initial.hpp"
 #include "file_read_write_system.h"
 #include <random>
+#include <bson.h>
+#include <bson-types.h>
+#include "bson_.h"
 using namespace utils;
+
+
 int main() {
+
+    create_bson_couple b;
+    string attr("attr");
+    string value("value");
+    b.insert_UTF8_value("attr","value");
+    b.insert_int32_value("int32",683);
+    int a;
+
+
+
+
+
+
+
+
+
+
+
+//    bson_t b=BSON_INITIALIZER;
+//    //char a[] ="ad";
+//    bson_append_utf8 (&b, "key", -1,"123", -1);
+//    bson_append_utf8 (&b, "key23", -1, "value2", -1);
+//    //cout<<b['key'];
+//    int avf;
+//
+//    //bson_t *b;
+//    bson_iter_t iter;
+//
+//    //if ((b = bson_new_from_data (my_data, my_data_len)))
+//    {
+//        const bson_value_t *value;
+//        if (bson_iter_init (&iter, &b)) {
+//            while (bson_iter_next (&iter)) {
+//                printf ("Found element key: \"%s\"\n", bson_iter_key (&iter));
+//                value  = bson_iter_value(&iter);
+//                cout<<value->value.v_utf8.str;
+//            }
+//        }
+//        bson_destroy (&b);
+//    }
+
 
 
 //    Manager<int, int> manager(-2147483648);
 //
-//    for(int i=0;i<25;i++)
-//        manager.insert_data(14,5);
+//    for(int i=0;i<100000;i++) {
+//        if (i % 1000 == 0)
+//            cout << i << endl;
+//        manager.insert_data(i, i);
+//    }
+//
+
 //
 //    for (int i=0;i<50;i++)
 //        manager.data_search(i);
-
-    basic_read_write testfile("../test");
-    testfile.insert_value("jtsghrz");
-    testfile.read_value();
-
+//    basic_read_write testfile("../test.tfrecord");
+//    int a;
+//    testfile.insert_value("jtsghrz");
 
 
 }
