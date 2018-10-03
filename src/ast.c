@@ -166,11 +166,13 @@ struct _OprtNode *new_oprt_node(enum OprtType type)
     return root;
 }
 
-void delete_oprt_node(struct _OprtNode *node)
+void del_oprt_node(struct _OprtNode *node)
 {
     assert(node != NULL);
 
-    del_tabl_list(node->table_);
+    if(node->table_ != NULL) {
+        del_tabl_list(node->table_);
+    }
     switch(node->type_) {
     case TS_CREATE:
         del_DefOpts_node(node->universalList_.defOpts_);
@@ -289,12 +291,14 @@ void del_kvPair_node(struct _kv_pair *kv)
     }
 }
 
-struct _DefOpts *new_DefOpts_node(enum DefType type)
+struct _DefOpts *new_DefOpts_node()
 {
     struct _DefOpts *node = (struct _DefOpts *)malloc(sizeof(struct _DefOpts));
 
     bzero(node, sizeof(struct _DefOpts));
     node->kvPair_ = NULL;
+    node->next = NULL;
+
     return node;
 }
 
@@ -303,7 +307,16 @@ void del_DefOpts_node(struct _DefOpts *node)
     assert(node != NULL);
 
     del_kvPair_node(node->kvPair_);
-    free(node);
+    struct _DefOpts *head = node->next;
+    struct _DefOpts *target = node;
+    while(head != NULL) {
+        free(node);
+        node = head;
+
+        head = head->next;
+    }
+
+    free(target);
 }
 
 #ifdef __cplusplus

@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 #include <strings.h>
+#include <stdint.h>
 
 enum atom_types
 {
@@ -96,15 +97,24 @@ void delete_opts_node(ast_node_opts *node);
 
 // ---------- this following structure will be used as operator such as `SELECT', `CREATE', `INSERT' etc. -------
 
+static uint8_t __Sql_NOTNULLX = 0x01;
+static uint8_t __Sql_AUTOINC = 0x02;
+static uint8_t __Sql_UNIKEY = 0x04;
+static uint8_t __Sql_PRIKEY = 0x08;
+static uint8_t __Sql_KEY = 0x10;
+
 enum OprtType
 {
     TS_CREATE, TS_INSERT, TS_SELECT, TS_DELETE
 };
 
-enum DefType
+enum DataType
 {
-    DEF_NOTNULL, DEF_NULL, DEF_INC, DEF_PRIMARY,
+    DT_BIT, DT_TINYINT, DT_SMALLINT, DT_MEDINT, DT_INT, DT_INTEGER, DT_BIGINT, DT_REAL, DT_DOUBLE, DT_FLOAT,
+    DT_DECIMAL, DT_DATE, DT_TIME, DT_TIMESTAMP, DT_DATETIME, DT_YEAR, DT_CHAR, DT_VARCHAR, DT_BINARY, DT_MEDBIN,
+    DT_BLOB, DT_VARBIN, DT_TINYBIN, DT_LONGBIN, DT_TEXT, DT_TINYTEXT, DT_MEDTEXT, DT_LONGTEXT
 };
+
 
 struct _TablList;
 struct _NameList;
@@ -156,13 +166,18 @@ struct _kv_pair {
     struct _kv_pair *next;
 };
 
+struct _DataType {
+    uint32_t type_;
+    uint8_t size_;
+    uint8_t uz_;        // meaning unsigned or fill with zero..
+};
+
 struct _DefOpts {
     struct _kv_pair *kvPair_;
-    int isPrimary_;
-    int isAbleNull_;
-    int isDefaultStr_;
-    int isDefaultInt_;
-    int isAutoInc_;
+    int attri_;
+    struct _DataType dataType_;
+
+    struct _DefOpts *next;
 };
 
 struct _NameList {
@@ -204,7 +219,7 @@ struct _kv_pair *new_kvPair_node(char *key, char *value);
 void add_kvPair_node(struct _kv_pair *list, char *key, char *value);
 void del_kvPair_node(struct _kv_pair *kv);
 
-struct _DefOpts *new_DefOpts_node(enum DefType type);
+struct _DefOpts *new_DefOpts_node();
 void del_DefOpts_node(struct _DefOpts *node);
 
 #ifdef __cplusplus

@@ -376,24 +376,11 @@ void yyerror(const char *s, ...);
 %token FDATE_ADD FDATE_SUB
 %token FCOUNT
 
-/*
-%type <ast_node_sexp*> select_stmt create_table_stmt select_expr_list table_references
-
-%type <intval> val_list opt_val_list case_list select_opts
-%type <intval> groupby_list opt_with_rollup opt_asc_desc
-%type <intval> opt_inner_cross opt_outer
-%type <intval> left_or_right opt_left_or_right_outer column_list
-%type <intval> index_list opt_for_join
-%type <intval> delete_opts delete_list
-%type <intval> insert_opts insert_vals insert_vals_list
-%type <intval> insert_asgn_list opt_if_not_exists update_opts update_asgn_list
-%type <intval> opt_temporary opt_length opt_binary opt_uz enum_list
-%type <intval> column_atts data_type opt_ignore_replace create_col_list
-*/
-
 %type <struct _OprtNode*> create_table_stmt
-%type <struct _kv_pair *> create_col_list
+%type <struct _DefOpts *> create_col_list create_definition
 %type <columns_list *> column_list
+%type <uint8_t> column_atts opt_length opt_binary opt_uz
+%type <struct _DataType> data_type
 
 %start stmt_list
 
@@ -415,53 +402,47 @@ create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_
                 root->table_ = table;
 
                 $$ = root;
-                emit("CREATE %d %d %d %s", $2, $4, $7, $5);
                 free($5);
             }
     ;
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME '(' create_col_list ')'
             {
+                struct _OprtNode *root = new_oprt_node(TS_CREATE);
+                struct _TablList *table = new_tabl_list($5, $7);
+                struct _DefOpts *opts = $9;
 
-                emit("CREATE %d %d %d %s.%s", $2, $4, $9, $5, $7); free($5); free($7);
+                $$ = root;
+                free($5);
+                free($7);
             }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
-            create_select_statement { emit("CREATESELECT %d %d %d %s", $2, $4, $7, $5); free($5); }
-    ;
-
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME create_select_statement
-            { emit("CREATESELECT %d %d 0 %s", $2, $4, $5); free($5); }
-    ;
-
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME '(' create_col_list ')' create_select_statement
-            { emit("CREATESELECT %d %d 0 %s.%s", $2, $4, $5, $7); free($5); free($7); }
-    ;
-
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME create_select_statement
-            { emit("CREATESELECT %d %d 0 %s.%s", $2, $4, $5, $7); free($5); free($7); }
-    ;
-
+/* 在这里建一个链表.. */
 create_col_list: create_definition  { $$ = $1; }
-    | create_col_list ',' create_definition { $$ = $1 + 1; }
+    | create_col_list ',' create_definition
+    {
+        $3->next = $1->next;
+        $1->next = $3;
+        $$ = $1;
+    }
     ;
 
-create_definition: { emit("STARTCOL"); } NAME data_type column_atts { emit("COLUMNDEF %d %s", $3, $2); free($2); }
-    | PRIMARY KEY '(' column_list ')'    { emit("PRIKEY %d", $4); }
-    | KEY '(' column_list ')'            { emit("KEY %d", $3); }
-    | INDEX '(' column_list ')'          { emit("KEY %d", $3); }
+create_definition: NAME data_type column_atts
+                {
+                    struct _DefOpts *head = new_DefOpts_node();
+                    head->attri_ = column_atts;
+                    head.dataType_ = $2;
+                    $$ = head;
+                }
     ;
 
 column_atts: /* nil */ { $$ = 0; }
-    | column_atts NOT NULLX             { emit("ATTR NOTNULL"); $$ = $1 + 1; }
-    | column_atts DEFAULT STRING        { emit("ATTR DEFAULT STRING %s", $3); free($3); $$ = $1 + 1; }
-    | column_atts DEFAULT INTNUM        { emit("ATTR DEFAULT NUMBER %d", $3); $$ = $1 + 1; }
-    | column_atts DEFAULT BOOL          { emit("ATTR DEFAULT BOOL %d", $3); $$ = $1 + 1; }
-    | column_atts AUTO_INCREMENT        { emit("ATTR AUTOINC"); $$ = $1 + 1; }
-    | column_atts UNIQUE KEY            { emit("ATTR UNIQUEKEY"); $$ = $1 + 1; }
-    | column_atts PRIMARY KEY           { emit("ATTR PRIKEY"); $$ = $1 + 1; }
-    | column_atts KEY                   { emit("ATTR PRIKEY"); $$ = $1 + 1; }
+    | column_atts NOT NULLX             { $$ = $1 | __Sql_NOTNULL; }
+    | column_atts AUTO_INCREMENT        { $$ = $1 | __Sql_AUTOINC; }
+    | column_atts UNIQUE KEY            { $$ = $1 | __Sql_UNIKEY; }
+    | column_atts PRIMARY KEY           { $$ = $1 | __Sql_PRIKEY; }
+    | column_atts KEY                   { $$ = $1 | __Sql_KEY; }
     ;
 
 opt_length: /* nil */   { $$ = 0; }
@@ -478,20 +459,15 @@ opt_uz: /* nil */       { $$ = 0; }
     | opt_uz ZEROFILL   { $$ = $1 | 2000; }
     ;
 
-opt_csc: /* nil */
-    | opt_csc CHAR SET STRING { emit("COLCHARSET %s", $4); free($4); }
-    | opt_csc COLLATE STRING  { emit("COLCOLLATE %s", $3); free($3); }
-    ;
-
-data_type: BIT opt_length           { $$ = 10000 + $2; }
-    | TINYINT opt_length opt_uz      { $$ = 10000 + $2; }
-    | SMALLINT opt_length opt_uz     { $$ = 20000 + $2 + $3; }
-    | MEDIUMINT opt_length opt_uz    { $$ = 30000 + $2 + $3; }
-    | INT opt_length opt_uz          { $$ = 40000 + $2 + $3; }
-    | INTEGER opt_length opt_uz      { $$ = 50000 + $2 + $3; }
-    | BIGINT opt_length opt_uz       { $$ = 60000 + $2 + $3; }
-    | REAL opt_length opt_uz         { $$ = 70000 + $2 + $3; }
-    | DOUBLE opt_length opt_uz       { $$ = 80000 + $2 + $3; }
+data_type: BIT opt_length            { struct _DataType data; data->type_ = DT_BIT; data->size_ = $2; $$ = data; }
+    | TINYINT opt_length opt_uz      { struct _DataType data; data->type_ = DT_TINYINT; data->size_  $2; $$ = data; }
+    | SMALLINT opt_length opt_uz     { struct _DataType data; data->type_ = DT_SMALLINT; data->size_ = $2; data->uz_ = $3; $$ = data; }
+    | MEDIUMINT opt_length opt_uz    { struct _DataType data; data->type_ = DT_MEDINT; data->size_ = $2; data->uz_ = $3; $$ = data; }
+    | INT opt_length opt_uz          { struct _DataType data; data->type_ = DT_INT; data->size_ = $2; data->uz_ = $3; $$ = data; }
+    | INTEGER opt_length opt_uz      { struct _DataType data; data->type_ = DT_INTEGER; data->size_ = $2; data->uz_ = $3; $$ = data; }
+    | BIGINT opt_length opt_uz       { struct _DataType data; data->type_ = DT_BIGINT; data->size_ = $2; data->uz_ = $3; $$ = data; }
+    | REAL opt_length opt_uz         { struct _DataType data; data->type_ = DT_REAL; data->size_ = $2; data->uz_ = $3; $$ = data; }
+    | DOUBLE opt_length opt_uz       { struct _DataType data; data->type_ = DT_DOUBLE; data->size_ = $2; data->uz_ = $3; $$ = data; }
     | FLOAT opt_length opt_uz        { $$ = 90000 + $2 + $3; }
     | DECIMAL opt_length opt_uz      { $$ = 110000 + $2 + $3; }
     | DATE                           { $$ = 100001; }
@@ -499,27 +475,18 @@ data_type: BIT opt_length           { $$ = 10000 + $2; }
     | TIMESTAMP                      { $$ = 100003; }
     | DATETIME                       { $$ = 100004; }
     | YEAR                           { $$ = 100005; }
-    | CHAR opt_length opt_csc        { $$ = 120000 + $2; }
-    | VARCHAR '(' INTNUM ')' opt_csc { $$ = 130000 + $3; }
+    | CHAR opt_length                { $$ = 120000 + $2; }
+    | VARCHAR '(' INTNUM ')'         { $$ = 130000 + $3; }
     | BINARY opt_length              { $$ = 140000 + $2; }
     | VARBINARY '(' INTNUM ')'       { $$ = 150000 + $3; }
     | TINYBLOB                       { $$ = 160001; }
     | BLOB                           { $$ = 160002; }
     | MEDIUMBLOB                     { $$ = 160003; }
     | LONGBLOB                       { $$ = 160004; }
-    | TINYTEXT opt_binary opt_csc    { $$ = 170000 + $2; }
-    | TEXT opt_binary opt_csc        { $$ = 171000 + $2; }
-    | MEDIUMTEXT opt_binary opt_csc  { $$ = 172000 + $2; }
-    | LONGTEXT opt_binary opt_csc    { $$ = 173000 + $2; }
-    | ENUM '(' enum_list ')' opt_csc { $$ = 200000 + $3; }
-    | SET '(' enum_list ')' opt_csc  { $$ = 210000 + $3; }
-    ;
-
-enum_list: STRING           { emit("ENUMVAL %s", $1); free($1); $$ = 1; }
-    | enum_list ',' STRING  { emit("ENUMVAL %s", $3); free($3); $$ = $1 + 1; }
-    ;
-
-create_select_statement: opt_ignore_replace opt_as select_stmt { emit("CREATESELECT %d", $1); }
+    | TINYTEXT opt_binary            { $$ = 170000 + $2; }
+    | TEXT opt_binary                { $$ = 171000 + $2; }
+    | MEDIUMTEXT opt_binary          { $$ = 172000 + $2; }
+    | LONGTEXT opt_binary            { $$ = 173000 + $2; }
     ;
 
 opt_ignore_replace: /* nil */ { $$ = 0; }

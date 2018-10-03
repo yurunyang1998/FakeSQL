@@ -44,5 +44,10 @@ int main()
 
     print_OprtInfo(head);
     print_kv(kv);
+
+    del_oprt_node(head);
+    del_NameList_node(list);
+    del_kvPair_node(kv);
+
     return 0;
 }
