@@ -8,7 +8,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include "commons.h"
 #include <strings.h>
 #include <stdint.h>
 
@@ -102,11 +102,6 @@ static uint8_t __Sql_AUTOINC = 0x02;
 static uint8_t __Sql_UNIKEY = 0x04;
 static uint8_t __Sql_PRIKEY = 0x08;
 static uint8_t __Sql_KEY = 0x10;
-
-enum OprtType
-{
-    TS_CREATE, TS_INSERT, TS_SELECT, TS_DELETE
-};
 
 enum DataType
 {

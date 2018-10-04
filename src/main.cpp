@@ -1,7 +1,6 @@
 #include <iostream>
 #include "module.h"
 #include "socket.hpp"
-#include "hyperfine_structure.hpp"
 
 int main(int argc, const char *argv[])
 {

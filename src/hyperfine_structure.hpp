@@ -18,7 +18,7 @@
 #ifndef HYPERFINE_STRUCTURE_HPP
 #define HYPERFINE_STRUCTURE_HPP
 
-#include "ast.h"
+#include "commons.h"
 #include <vector>
 #include <string>
 
