@@ -1,6 +1,7 @@
 #include <iostream>
 #include "module.h"
 #include "socket.hpp"
+#include "hyperfine_structure.hpp"
 
 int main(int argc, const char *argv[])
 {
@@ -18,6 +19,7 @@ int main(int argc, const char *argv[])
     mod = new_module_from_string(demo);
     res = parse_module(mod);
     delete_module(mod);
-    return res;
+
+    return 0;
 
 }
