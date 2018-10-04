@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include "ast.h"
 #include <iostream>
+#include "module.h"
 
 // TODO: Implementing the unit testint of the `ast.h' file.
 // unit test should be added below.
@@ -30,6 +31,11 @@ void print_kv(const struct _kv_pair *head)
         std::cout << "key: " << tmp->first_ << "   value: " << tmp->second_ << std::endl;
         tmp = tmp->next;
     }
+
+}
+
+void scan_oprt_node(struct _OprtNode *root)
+{
 
 }
 

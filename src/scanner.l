@@ -135,6 +135,7 @@ INT1|TINYINT        { return TINYINT; }
 INT2|SMALLINT       { return SMALLINT; }
 INTERVAL            { return INTERVAL; }
 INTO                { return INTO; }
+INT                 { return INT; }
 IS                  { return IS; }
 ISOLATION           { return ISOLATION; }
 
