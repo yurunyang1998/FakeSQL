@@ -13,6 +13,8 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#include <strings.h>
+#include <stdint.h>
 
 #include "ast.h"
 #include "parser.h"
@@ -21,6 +23,14 @@
 
 void emit(char *s, ...);
 void yyerror(const char *s, ...);
+
+struct _DataType newDataTypeNode()
+{
+    struct _DataType data;
+    bzero(&data, sizeof(struct _DataType));
+    return data;
+}
+
 %}
 %debug
 
@@ -36,6 +46,13 @@ void yyerror(const char *s, ...);
     double floatval;
     char *strval;
     int subtok;
+
+    struct _OprtNode *oprtNode_p;
+    struct _DefOpts *defOpts_p;
+    uint8_t uintval8;
+    uint64_t uintval64;
+    struct _DataType dataType_t;
+    columns_list_t *colList_p;
 }
 
 
@@ -376,11 +393,13 @@ void yyerror(const char *s, ...);
 %token FDATE_ADD FDATE_SUB
 %token FCOUNT
 
-%type <struct _OprtNode*> create_table_stmt
-%type <struct _DefOpts *> create_col_list create_definition
-%type <columns_list *> column_list
-%type <uint8_t> column_atts opt_length opt_binary opt_uz
-%type <struct _DataType> data_type
+%type <oprtNode_p> create_table_stmt
+%type <defOpts_p> create_col_list create_definition
+/* %type <colList_p> column_list */
+%type <uintval8> opt_binary opt_uz
+%type <dataType_t> data_type
+%type <uintval64> opt_length
+%type <intval> column_atts
 
 %start stmt_list
 
@@ -394,27 +413,30 @@ stmt_list: stmt ';'
 stmt: create_table_stmt { mod->root = $1; }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '(' create_col_list ')'
+create_table_stmt: CREATE TABLE NAME '(' create_col_list ')'
             {
                 struct _OprtNode *root = new_oprt_node(TS_CREATE);
-                struct _TablList *table = new_tabl_list($5, NULL);
-                struct _kv_pair *kv = $7;
+                struct _TablList *table = new_tabl_list($3, NULL);
+                struct _DefOpts *opts = $5;
                 root->table_ = table;
-
+                root->universalList_.defOpts_ = opts;
+                root->options_ = NULL;
                 $$ = root;
-                free($5);
+                free($3);
             }
     ;
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists NAME '.' NAME '(' create_col_list ')'
+create_table_stmt: CREATE TABLE NAME '.' NAME '(' create_col_list ')'
             {
                 struct _OprtNode *root = new_oprt_node(TS_CREATE);
-                struct _TablList *table = new_tabl_list($5, $7);
-                struct _DefOpts *opts = $9;
-
+                struct _TablList *table = new_tabl_list($3, $5);
+                struct _DefOpts *opts = $7;
+                root->table_ = table;
+                root->universalList_.defOpts_ = opts;
+                root->options_ = NULL;
                 $$ = root;
+                free($3);
                 free($5);
-                free($7);
             }
     ;
 
@@ -431,14 +453,14 @@ create_col_list: create_definition  { $$ = $1; }
 create_definition: NAME data_type column_atts
                 {
                     struct _DefOpts *head = new_DefOpts_node();
-                    head->attri_ = column_atts;
-                    head.dataType_ = $2;
+                    head->attri_ = $3;
+                    head->dataType_ = $2;
                     $$ = head;
                 }
     ;
 
 column_atts: /* nil */ { $$ = 0; }
-    | column_atts NOT NULLX             { $$ = $1 | __Sql_NOTNULL; }
+    | column_atts NOT NULLX             { $$ = $1 | __Sql_NOTNULLX; }
     | column_atts AUTO_INCREMENT        { $$ = $1 | __Sql_AUTOINC; }
     | column_atts UNIQUE KEY            { $$ = $1 | __Sql_UNIKEY; }
     | column_atts PRIMARY KEY           { $$ = $1 | __Sql_PRIKEY; }
@@ -451,51 +473,42 @@ opt_length: /* nil */   { $$ = 0; }
     ;
 
 opt_binary: /* nil */ { $$ = 0; }
-    | BINARY    { $$ = 4000; }
+    | BINARY    { $$ = 0x04; }
     ;
 
 opt_uz: /* nil */       { $$ = 0; }
-    | opt_uz UNSIGNED   { $$ = $1 | 1000; }
-    | opt_uz ZEROFILL   { $$ = $1 | 2000; }
+    | opt_uz UNSIGNED   { $$ = $1 | 0x01; }
+    | opt_uz ZEROFILL   { $$ = $1 | 0x02; }
     ;
 
-data_type: BIT opt_length            { struct _DataType data; data->type_ = DT_BIT; data->size_ = $2; $$ = data; }
-    | TINYINT opt_length opt_uz      { struct _DataType data; data->type_ = DT_TINYINT; data->size_  $2; $$ = data; }
-    | SMALLINT opt_length opt_uz     { struct _DataType data; data->type_ = DT_SMALLINT; data->size_ = $2; data->uz_ = $3; $$ = data; }
-    | MEDIUMINT opt_length opt_uz    { struct _DataType data; data->type_ = DT_MEDINT; data->size_ = $2; data->uz_ = $3; $$ = data; }
-    | INT opt_length opt_uz          { struct _DataType data; data->type_ = DT_INT; data->size_ = $2; data->uz_ = $3; $$ = data; }
-    | INTEGER opt_length opt_uz      { struct _DataType data; data->type_ = DT_INTEGER; data->size_ = $2; data->uz_ = $3; $$ = data; }
-    | BIGINT opt_length opt_uz       { struct _DataType data; data->type_ = DT_BIGINT; data->size_ = $2; data->uz_ = $3; $$ = data; }
-    | REAL opt_length opt_uz         { struct _DataType data; data->type_ = DT_REAL; data->size_ = $2; data->uz_ = $3; $$ = data; }
-    | DOUBLE opt_length opt_uz       { struct _DataType data; data->type_ = DT_DOUBLE; data->size_ = $2; data->uz_ = $3; $$ = data; }
-    | FLOAT opt_length opt_uz        { $$ = 90000 + $2 + $3; }
-    | DECIMAL opt_length opt_uz      { $$ = 110000 + $2 + $3; }
-    | DATE                           { $$ = 100001; }
-    | TIME                           { $$ = 100002; }
-    | TIMESTAMP                      { $$ = 100003; }
-    | DATETIME                       { $$ = 100004; }
-    | YEAR                           { $$ = 100005; }
-    | CHAR opt_length                { $$ = 120000 + $2; }
-    | VARCHAR '(' INTNUM ')'         { $$ = 130000 + $3; }
-    | BINARY opt_length              { $$ = 140000 + $2; }
-    | VARBINARY '(' INTNUM ')'       { $$ = 150000 + $3; }
-    | TINYBLOB                       { $$ = 160001; }
-    | BLOB                           { $$ = 160002; }
-    | MEDIUMBLOB                     { $$ = 160003; }
-    | LONGBLOB                       { $$ = 160004; }
-    | TINYTEXT opt_binary            { $$ = 170000 + $2; }
-    | TEXT opt_binary                { $$ = 171000 + $2; }
-    | MEDIUMTEXT opt_binary          { $$ = 172000 + $2; }
-    | LONGTEXT opt_binary            { $$ = 173000 + $2; }
-    ;
-
-opt_ignore_replace: /* nil */ { $$ = 0; }
-    | IGNORE            { $$ = 1; }
-    | REPLACE           { $$ = 2; }
-    ;
-
-opt_temporary:   /* nil */ { $$ = 0; }
-    | TEMPORARY { $$ = 1;}
+data_type: BIT opt_length            { struct _DataType data = newDataTypeNode(); data.type_ = DT_BIT; data.size_ = $2; $$ = data; }
+    | TINYINT opt_length opt_uz      { struct _DataType data = newDataTypeNode(); data.type_ = DT_TINYINT; data.size_ = $2; $$ = data; }
+    | SMALLINT opt_length opt_uz     { struct _DataType data = newDataTypeNode(); data.type_ = DT_SMALLINT; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | MEDIUMINT opt_length opt_uz    { struct _DataType data = newDataTypeNode(); data.type_ = DT_MEDINT; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | INT opt_length opt_uz          { struct _DataType data = newDataTypeNode(); data.type_ = DT_INT; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | INTEGER opt_length opt_uz      { struct _DataType data = newDataTypeNode(); data.type_ = DT_INTEGER; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | BIGINT opt_length opt_uz       { struct _DataType data = newDataTypeNode(); data.type_ = DT_BIGINT; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | REAL opt_length opt_uz         { struct _DataType data = newDataTypeNode(); data.type_ = DT_REAL; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | DOUBLE opt_length opt_uz       { struct _DataType data = newDataTypeNode(); data.type_ = DT_DOUBLE; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | FLOAT opt_length opt_uz        { struct _DataType data = newDataTypeNode(); data.type_ = DT_FLOAT; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | DECIMAL opt_length opt_uz      { struct _DataType data = newDataTypeNode(); data.type_ = DT_DECIMAL; data.size_ = $2; data.uz_ = $3; $$ = data; }
+    | DATE                           { struct _DataType data = newDataTypeNode(); data.type_ = DT_DATE; $$ = data; }
+    | TIME                           { struct _DataType data = newDataTypeNode(); data.type_ = DT_TIME; $$ = data; }
+    | TIMESTAMP                      { struct _DataType data = newDataTypeNode(); data.type_ = DT_TIMESTAMP; $$ = data; }
+    | DATETIME                       { struct _DataType data = newDataTypeNode(); data.type_ = DT_DATETIME; $$ = data; }
+    | YEAR                           { struct _DataType data = newDataTypeNode(); data.type_ = DT_YEAR; $$ = data; }
+    | CHAR opt_length                { struct _DataType data = newDataTypeNode(); data.type_ = DT_CHAR; data.size_ = $2; $$ = data; }
+    | VARCHAR '(' INTNUM ')'         { struct _DataType data = newDataTypeNode(); data.type_ = DT_VARCHAR; data.size_ = $3; $$ = data; }
+    | BINARY opt_length              { struct _DataType data = newDataTypeNode(); data.type_ = DT_BINARY; data.size_ = $2; $$ = data; }
+    | VARBINARY '(' INTNUM ')'       { struct _DataType data = newDataTypeNode(); data.type_ = DT_VARBIN; data.size_ = $3; $$ = data; }
+    | TINYBLOB                       { struct _DataType data = newDataTypeNode(); data.type_ = DT_TINYBLOB; $$ = data; }
+    | BLOB                           { struct _DataType data = newDataTypeNode(); data.type_ = DT_BLOB; $$ = data; }
+    | MEDIUMBLOB                     { struct _DataType data = newDataTypeNode(); data.type_ = DT_MEDBLOB; $$ = data; }
+    | LONGBLOB                       { struct _DataType data = newDataTypeNode(); data.type_ = DT_LONGBLOB; $$ = data; }
+    | TINYTEXT opt_binary            { struct _DataType data = newDataTypeNode(); data.type_ = DT_TINYTEXT; data.isBin_ = $2; $$ = data; }
+    | TEXT opt_binary                { struct _DataType data = newDataTypeNode(); data.type_ = DT_TEXT; data.isBin_ = $2; $$ = data; }
+    | MEDIUMTEXT opt_binary          { struct _DataType data = newDataTypeNode(); data.type_ = DT_MEDTEXT; data.isBin_ = $2; $$ = data; }
+    | LONGTEXT opt_binary            { struct _DataType data = newDataTypeNode(); data.type_ = DT_LONGTEXT; data.isBin_ = $2; $$ = data; }
     ;
 
 /* select statement */
@@ -549,21 +562,21 @@ opt_temporary:   /* nil */ { $$ = 0; }
     /* | INTO column_list  { emit("INTO %d", $2); } */
     /* ; */
 
-column_list: NAME
-            {
-                columns_list_t *list = new_NameList_node($1);
-                free($1);
-                $$ = list;
-            }
-             column_list ',' NAME
-            {
-                columns_list_t *list = new_NameList_node($3);
-                list->next = $1->next;
-                $1->next = list;
-                free($3);
-                $$ = $1;
-            }
-    ;
+/* column_list: NAME
+ *             {
+ *                 columns_list_t *list = new_NameList_node($1);
+ *                 free($1);
+ *                 $$ = list;
+ *             }
+ *             | column_list ',' NAME
+ *             {
+ *                 columns_list_t *list = new_NameList_node($3);
+ *                 list->next = $1->next;
+ *                 $1->next = list;
+ *                 free($3);
+ *                 $$ = $1;
+ *             }
+ *     ; */
 
 /* select_opts:                          { $$ = 0; } */
     /* | select_opts ALL                 { if($$ & 01) yyerror("duplicate ALL option"); $$ = $1 | 01; } */
@@ -796,15 +809,9 @@ column_list: NAME
 /* stmt: create_database_stmt { emit("STMT"); } */
     /* ; */
 /*  */
-/* create_database_stmt: CREATE DATABASE opt_if_not_exists NAME    { emit("CREATEDATABASE %d %s", $3, $4); free($4); } */
-    /* | CREATE SCHEMA opt_if_not_exists NAME                      { emit("CREATEDATABASE %d %s", $3, $4); free($4); } */
+/* create_database_stmt: CREATE DATABASE NAME    { emit("CREATEDATABASE %d %s", $3, $4); free($4); } */
+    /* | CREATE SCHEMA NAME                      { emit("CREATEDATABASE %d %s", $3, $4); free($4); } */
     /* ; */
-/*  */
-/* opt_if_not_exists:  [> nil <] { $$ = 0; } */
-    /* | IF EXISTS           { if(!$2)yyerror("IF EXISTS doesn't exist"); $$ = $2; } */
-    /* ; */
-
-
 
 /* set user variables */
 
@@ -821,66 +828,66 @@ column_list: NAME
 
 /**** expressions ****/
 
-expr: NAME              { emit("NAME %s", $1); free($1); }
-    | USERVAR           { emit("USERVAR %s", $1); free($1); }
-    | NAME '.' NAME     { emit("FIELDNAME %s.%s", $1, $3); free($1); free($3); }
-    | STRING            { emit("STRING %s", $1); free($1); }
-    | INTNUM            { emit("NUMBER %d", $1); }
-    | APPROXNUM         { emit("FLOAT %g", $1); }
-    | BOOL              { emit("BOOL %d", $1); }
-    ;
-
-expr: expr '+' expr             { emit("ADD"); }
-    | expr '-' expr             { emit("SUB"); }
-    | expr '*' expr             { emit("MUL"); }
-    | expr '/' expr             { emit("DIV"); }
-    | expr '%' expr             { emit("MOD"); }
-    | expr MOD expr             { emit("MOD"); }
-    | '-' expr %prec UMINUS     { emit("NEG"); }
-    | expr ANDOP expr           { emit("AND"); }
-    | expr OR expr              { emit("OR"); }
-    | expr XOR expr             { emit("XOR"); }
-    | expr COMPARISON expr      { emit("CMP %d", $2); }
-    | expr COMPARISON '(' select_stmt ')'       { emit("CMPSELECT %d", $2); }
-    | expr COMPARISON ANY '(' select_stmt ')'   { emit("CMPANYSELECT %d", $2); }
-    | expr COMPARISON SOME '(' select_stmt ')'  { emit("CMPANYSELECT %d", $2); }
-    | expr COMPARISON ALL '(' select_stmt ')'   { emit("CMPALLSELECT %d", $2); }
-    | expr '|' expr         { emit("BITOR"); }
-    | expr '&' expr         { emit("BITAND"); }
-    | expr '^' expr         { emit("BITXOR"); }
-    | expr SHIFT expr       { emit("SHIFT %s", $2 == 1 ? "left":"right"); }
-    | NOT expr              { emit("NOT"); }
-    | '!' expr              { emit("NOT"); }
-    | USERVAR ASSIGN expr   { emit("ASSIGN @%s", $1); free($1); }
-    ;
-
-expr: expr IS NULLX     { emit("ISNULL"); }
-    | expr IS NOT NULLX { emit("ISNULL"); emit("NOT"); }
-    | expr IS BOOL      { emit("ISBOOL %d", $3); }
-    | expr IS NOT BOOL  { emit("ISBOOL %d", $4); emit("NOT"); }
-    ;
-
-expr: expr BETWEEN expr AND expr %prec BETWEEN { emit("BETWEEN"); }
-    ;
-
-
-val_list: expr { $$ = 1; }
-    | expr ',' val_list { $$ = 1 + $3; }
-    ;
-
-opt_val_list: /* nil */ { $$ = 0; }
-    | val_list
-    ;
-
-expr: expr IN '(' val_list ')'          { emit("ISIN %d", $4); }
-    | expr NOT IN '(' val_list ')'      { emit("ISIN %d", $5); emit("NOT"); }
-    | expr IN '(' select_stmt ')'       { emit("INSELECT"); }
-    | expr NOT IN '(' select_stmt ')'   { emit("INSELECT"); emit("NOT"); }
-    | EXISTS '(' select_stmt ')'        { emit("EXISTS"); if($1) emit("NOT"); }
-    ;
-
-expr: NAME '(' opt_val_list ')' { emit("CALL %d %s", $3, $1); free($1); }
-    ;
+/* expr: NAME              { emit("NAME %s", $1); free($1); }
+ *     | USERVAR           { emit("USERVAR %s", $1); free($1); }
+ *     | NAME '.' NAME     { emit("FIELDNAME %s.%s", $1, $3); free($1); free($3); }
+ *     | STRING            { emit("STRING %s", $1); free($1); }
+ *     | INTNUM            { emit("NUMBER %d", $1); }
+ *     | APPROXNUM         { emit("FLOAT %g", $1); }
+ *     | BOOL              { emit("BOOL %d", $1); }
+ *     ;
+ *
+ * expr: expr '+' expr             { emit("ADD"); }
+ *     | expr '-' expr             { emit("SUB"); }
+ *     | expr '*' expr             { emit("MUL"); }
+ *     | expr '/' expr             { emit("DIV"); }
+ *     | expr '%' expr             { emit("MOD"); }
+ *     | expr MOD expr             { emit("MOD"); }
+ *     | '-' expr %prec UMINUS     { emit("NEG"); }
+ *     | expr ANDOP expr           { emit("AND"); }
+ *     | expr OR expr              { emit("OR"); }
+ *     | expr XOR expr             { emit("XOR"); }
+ *     | expr COMPARISON expr      { emit("CMP %d", $2); }
+ *     | expr COMPARISON '(' select_stmt ')'       { emit("CMPSELECT %d", $2); }
+ *     | expr COMPARISON ANY '(' select_stmt ')'   { emit("CMPANYSELECT %d", $2); }
+ *     | expr COMPARISON SOME '(' select_stmt ')'  { emit("CMPANYSELECT %d", $2); }
+ *     | expr COMPARISON ALL '(' select_stmt ')'   { emit("CMPALLSELECT %d", $2); }
+ *     | expr '|' expr         { emit("BITOR"); }
+ *     | expr '&' expr         { emit("BITAND"); }
+ *     | expr '^' expr         { emit("BITXOR"); }
+ *     | expr SHIFT expr       { emit("SHIFT %s", $2 == 1 ? "left":"right"); }
+ *     | NOT expr              { emit("NOT"); }
+ *     | '!' expr              { emit("NOT"); }
+ *     | USERVAR ASSIGN expr   { emit("ASSIGN @%s", $1); free($1); }
+ *     ;
+ *
+ * expr: expr IS NULLX     { emit("ISNULL"); }
+ *     | expr IS NOT NULLX { emit("ISNULL"); emit("NOT"); }
+ *     | expr IS BOOL      { emit("ISBOOL %d", $3); }
+ *     | expr IS NOT BOOL  { emit("ISBOOL %d", $4); emit("NOT"); }
+ *     ;
+ *
+ * expr: expr BETWEEN expr AND expr %prec BETWEEN { emit("BETWEEN"); }
+ *     ;
+ *
+ *
+ * val_list: expr { $$ = 1; }
+ *     | expr ',' val_list { $$ = 1 + $3; }
+ *     ;
+ *
+ * opt_val_list: [> nil <] { $$ = 0; }
+ *     | val_list
+ *     ;
+ *
+ * expr: expr IN '(' val_list ')'          { emit("ISIN %d", $4); }
+ *     | expr NOT IN '(' val_list ')'      { emit("ISIN %d", $5); emit("NOT"); }
+ *     | expr IN '(' select_stmt ')'       { emit("INSELECT"); }
+ *     | expr NOT IN '(' select_stmt ')'   { emit("INSELECT"); emit("NOT"); }
+ *     | EXISTS '(' select_stmt ')'        { emit("EXISTS"); if($1) emit("NOT"); }
+ *     ;
+ *
+ * expr: NAME '(' opt_val_list ')' { emit("CALL %d %s", $3, $1); free($1); }
+ *     ; */
 
 
 /* functions with special syntax */

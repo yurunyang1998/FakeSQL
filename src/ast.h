@@ -112,7 +112,7 @@ enum DataType
 {
     DT_BIT, DT_TINYINT, DT_SMALLINT, DT_MEDINT, DT_INT, DT_INTEGER, DT_BIGINT, DT_REAL, DT_DOUBLE, DT_FLOAT,
     DT_DECIMAL, DT_DATE, DT_TIME, DT_TIMESTAMP, DT_DATETIME, DT_YEAR, DT_CHAR, DT_VARCHAR, DT_BINARY, DT_MEDBIN,
-    DT_BLOB, DT_VARBIN, DT_TINYBIN, DT_LONGBIN, DT_TEXT, DT_TINYTEXT, DT_MEDTEXT, DT_LONGTEXT
+    DT_TINYBLOB, DT_BLOB, DT_MEDBLOB, DT_VARBIN, DT_LONGBLOB, DT_TINYBIN, DT_LONGBIN, DT_TEXT, DT_TINYTEXT, DT_MEDTEXT, DT_LONGTEXT
 };
 
 
@@ -168,8 +168,9 @@ struct _kv_pair {
 
 struct _DataType {
     uint32_t type_;
-    uint8_t size_;
+    uint64_t size_;
     uint8_t uz_;        // meaning unsigned or fill with zero..
+    uint8_t isBin_;
 };
 
 struct _DefOpts {
