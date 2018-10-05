@@ -129,8 +129,8 @@ struct _OprtNode
     
     union
     {
-        struct _NameList *tableNameList_;
         struct _DefOpts *defOpts_;
+        struct _NameList *tableNameList_;
     } universalList_;
     
     struct _SqlOpts *options_;
@@ -169,7 +169,8 @@ struct _DataType {
 };
 
 struct _DefOpts {
-    struct _kv_pair *kvPair_;
+    // struct _kv_pair *kvPair_;
+    char nameRef_[32];
     int attri_;
     struct _DataType dataType_;
 

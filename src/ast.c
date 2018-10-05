@@ -296,7 +296,7 @@ struct _DefOpts *new_DefOpts_node()
     struct _DefOpts *node = (struct _DefOpts *)malloc(sizeof(struct _DefOpts));
 
     bzero(node, sizeof(struct _DefOpts));
-    node->kvPair_ = NULL;
+//    node->kvPair_ = NULL;
     node->next = NULL;
 
     return node;
@@ -306,7 +306,7 @@ void del_DefOpts_node(struct _DefOpts *node)
 {
     assert(node != NULL);
 
-    del_kvPair_node(node->kvPair_);
+//    del_kvPair_node(node->kvPair_);
     struct _DefOpts *head = node->next;
     struct _DefOpts *target = node;
     while(head != NULL) {

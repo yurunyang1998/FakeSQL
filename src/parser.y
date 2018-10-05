@@ -455,6 +455,7 @@ create_definition: NAME data_type column_atts
                     struct _DefOpts *head = new_DefOpts_node();
                     head->attri_ = $3;
                     head->dataType_ = $2;
+                    strncpy(head->nameRef_, $1, sizeof(head->nameRef_));
                     $$ = head;
                 }
     ;

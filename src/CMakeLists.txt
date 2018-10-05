@@ -1,6 +1,9 @@
 find_package(BISON)
 find_package(FLEX)
 
+message("-- Bison found version \"${BISON_VERSION}\"")
+message("-- Flex found version \"${FLEX_VERSION}\"")
+
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -6,7 +6,7 @@ int main(int argc, const char *argv[])
 {
     module *mod;
     int res;
-    char demo[] = "CREATE TABLE Person\n"
+    char demo[] = "CREATE TABLE Person.test\n"
                   "(\n"
                   "Id int,\n"
                   "LastName varchar(255),\n"
@@ -18,6 +18,12 @@ int main(int argc, const char *argv[])
     mod = new_module_from_string(demo);
     res = parse_module(mod);
     delete_module(mod);
+
+    if(res == 0) {
+        std::cout << "Success!" << std::endl;
+    } else {
+        std::cout << "Failure.." << std::endl;
+    }
 
     return 0;
 
