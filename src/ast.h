@@ -10,7 +10,6 @@ extern "C" {
 #endif
 #include "commons.h"
 #include <strings.h>
-#include <stdint.h>
 
 enum atom_types
 {
@@ -97,17 +96,12 @@ void delete_opts_node(ast_node_opts *node);
 
 // ---------- this following structure will be used as operator such as `SELECT', `CREATE', `INSERT' etc. -------
 
-static uint8_t __Sql_NOTNULLX = 0x01;
-static uint8_t __Sql_AUTOINC = 0x02;
-static uint8_t __Sql_UNIKEY = 0x04;
-static uint8_t __Sql_PRIKEY = 0x08;
-static uint8_t __Sql_KEY = 0x10;
 
 enum DataType
 {
     DT_BIT, DT_TINYINT, DT_SMALLINT, DT_MEDINT, DT_INT, DT_INTEGER, DT_BIGINT, DT_REAL, DT_DOUBLE, DT_FLOAT,
-    DT_DECIMAL, DT_DATE, DT_TIME, DT_TIMESTAMP, DT_DATETIME, DT_YEAR, DT_CHAR, DT_VARCHAR, DT_BINARY, DT_MEDBIN,
-    DT_TINYBLOB, DT_BLOB, DT_MEDBLOB, DT_VARBIN, DT_LONGBLOB, DT_TINYBIN, DT_LONGBIN, DT_TEXT, DT_TINYTEXT, DT_MEDTEXT, DT_LONGTEXT
+    DT_DECIMAL, DT_DATE, DT_TIME, DT_TIMESTAMP, DT_DATETIME, DT_YEAR, DT_CHAR, DT_VARCHAR, DT_BINARY,
+    DT_TINYBLOB, DT_BLOB, DT_MEDBLOB, DT_VARBIN, DT_LONGBLOB,   DT_TEXT, DT_TINYTEXT, DT_MEDTEXT, DT_LONGTEXT
 };
 
 
@@ -127,10 +121,11 @@ struct _OprtNode
      */
     struct _TablList *table_;
     
-    union
+    struct
     {
         struct _DefOpts *defOpts_;
         struct _NameList *tableNameList_;
+        // TODO: and other structure?
     } universalList_;
     
     struct _SqlOpts *options_;
@@ -194,6 +189,8 @@ struct _TablList {
 
 
 struct _SqlOpts {
+    struct _NameList *optColName_;
+
     char test[32];
 };
 
@@ -208,9 +205,9 @@ void del_tabl_list(struct _TablList *list);
 struct _OprtNode *new_oprt_node(enum OprtType type);
 void del_oprt_node(struct _OprtNode *node);
 
-columns_list_t *new_NameList_node(char *ref);
+columns_list_t *new_NameList_node();
 void add_NameList_node(columns_list_t *head, const char *ref);
-void del_NameList_node(columns_list_t *node);
+void del_NameList_node(columns_list_t *root);
 
 struct _kv_pair *new_kvPair_node(char *key, char *value);
 void add_kvPair_node(struct _kv_pair *list, char *key, char *value);
@@ -218,6 +215,18 @@ void del_kvPair_node(struct _kv_pair *kv);
 
 struct _DefOpts *new_DefOpts_node();
 void del_DefOpts_node(struct _DefOpts *node);
+
+struct _SqlOpts *new_SqlOpts_node();
+void del_SqlOpts_node(struct _SqlOpts *node);
+
+
+// TODO:parser 里的expr规则需要重新建立树...
+struct _ExprVar {
+    uint8_t type_;
+    char data_[16];
+};
+
+
 
 #ifdef __cplusplus
 }

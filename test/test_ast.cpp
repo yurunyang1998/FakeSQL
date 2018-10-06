@@ -5,9 +5,7 @@
 #include <cstdlib>
 #include "ast.h"
 #include <iostream>
-#include "module.h"
 
-// TODO: Implementing the unit testint of the `ast.h' file.
 // unit test should be added below.
 
 void print_OprtInfo(const struct _OprtNode *ref)
@@ -39,21 +37,23 @@ void scan_oprt_node(struct _OprtNode *root)
 
 }
 
+void print_NameList_node(columns_list_t *root)
+{
+    columns_list_t *head = root->next;
+
+    while(head != NULL) {
+        printf("%s\n", head->ref_);
+        head = head->next;
+    }
+}
+
 int main()
 {
-    struct _OprtNode *head = new_oprt_node(TS_CREATE);
-    columns_list_t *list = new_NameList_node(const_cast<char *>("test"));
-    head->universalList_.tableNameList_ = list;
-
-    struct _kv_pair *kv = new_kvPair_node(const_cast<char *>("test"), const_cast<char *>("test"));
-    add_kvPair_node(kv, const_cast<char *>("key"), const_cast<char *>("test"));
-
-    print_OprtInfo(head);
-    print_kv(kv);
-
-    del_oprt_node(head);
-    del_NameList_node(list);
-    del_kvPair_node(kv);
+    columns_list_t *root = new_NameList_node();
+    add_NameList_node(root, "test1");
+    add_NameList_node(root, "test2");
+    print_NameList_node(root);
+    del_NameList_node(root);
 
     return 0;
 }

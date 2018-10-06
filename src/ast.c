@@ -138,7 +138,6 @@ ast_node_opts *new_opts_node(enum opts_types type, void *v)
 void delete_opts_node(ast_node_opts *node)
 {
     switch(node->type) {
-    // TODO: 完成
     case OP_HAVING:
         break;
     case OP_GROUPBY:
@@ -222,21 +221,29 @@ void del_tabl_list(struct _TablList *list)
     }
 }
 
-
-columns_list_t *new_NameList_node(char *ref)
+// 直接申请两个节点,第一个为`root'节点, 它只存储链表,ref_不放任何东西.
+// `root->next' 指向的地方才是链表真正指向的地方
+columns_list_t *new_NameList_node()
 {
     struct _NameList *tmp = (struct _NameList *)malloc(sizeof(struct _NameList));
     assert(tmp != NULL);
-    assert(ref != NULL);
 
-    strncpy(tmp->ref_, ref, strlen(ref));
+    bzero(tmp, sizeof(struct _NameList));
     tmp->next = NULL;
+
     return tmp;
 }
 
-void add_NameList_node(columns_list_t *head, const char *ref)
+void add_NameList_node(columns_list_t *node, const char *ref)
 {
 
+    struct _NameList *head = (struct _NameList *)malloc(sizeof(struct _NameList));
+    assert(head != NULL);
+    assert(node != NULL);
+
+    strncpy(head->ref_, ref, strlen(ref));
+    head->next = node->next;
+    node->next = head;
 }
 
 void del_NameList_node(columns_list_t *node)
@@ -308,7 +315,6 @@ void del_DefOpts_node(struct _DefOpts *node)
 
 //    del_kvPair_node(node->kvPair_);
     struct _DefOpts *head = node->next;
-    struct _DefOpts *target = node;
     while(head != NULL) {
         free(node);
         node = head;
@@ -316,7 +322,23 @@ void del_DefOpts_node(struct _DefOpts *node)
         head = head->next;
     }
 
-    free(target);
+}
+
+
+struct _SqlOpts *new_SqlOpts_node()
+{
+    struct _SqlOpts *node = (struct _SqlOpts *)malloc(sizeof(struct _SqlOpts));
+    assert(node != NULL);
+
+    bzero(node, sizeof(struct _SqlOpts));
+    return node;
+}
+
+
+void del_SqlOpts_node(struct _SqlOpts *node)
+{
+    assert(node != NULL);
+    free(node);
 }
 
 #ifdef __cplusplus

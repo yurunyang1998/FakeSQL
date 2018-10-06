@@ -52,7 +52,9 @@ struct _DataType newDataTypeNode()
     uint8_t uintval8;
     uint64_t uintval64;
     struct _DataType dataType_t;
-    columns_list_t *colList_p;
+    columns_list_t colList_p;
+    
+    struct ExprVar exprVar_t;
 }
 
 
@@ -393,13 +395,17 @@ struct _DataType newDataTypeNode()
 %token FDATE_ADD FDATE_SUB
 %token FCOUNT
 
-%type <oprtNode_p> create_table_stmt
+%type <oprtNode_p> create_table_stmt insert_stmt
 %type <defOpts_p> create_col_list create_definition
-/* %type <colList_p> column_list */
-%type <uintval8> opt_binary opt_uz
+%type <colList_p> column_list opt_col_names
+%type <uintval8> opt_binary opt_uz insert_opts
 %type <dataType_t> data_type
 %type <uintval64> opt_length
 %type <intval> column_atts
+%type <exprVar_t> expr_val
+
+/* emmmm, 未使用的规则的类型声明... */
+%type <intval> opt_ondupupdate insert_asgn_list
 
 %start stmt_list
 
@@ -444,9 +450,8 @@ create_table_stmt: CREATE TABLE NAME '.' NAME '(' create_col_list ')'
 create_col_list: create_definition  { $$ = $1; }
     | create_col_list ',' create_definition
     {
-        $3->next = $1->next;
-        $1->next = $3;
-        $$ = $1;
+        $3->next = $1;
+        $$ = $3;
     }
     ;
 
@@ -563,21 +568,20 @@ data_type: BIT opt_length            { struct _DataType data = newDataTypeNode()
     /* | INTO column_list  { emit("INTO %d", $2); } */
     /* ; */
 
-/* column_list: NAME
- *             {
- *                 columns_list_t *list = new_NameList_node($1);
- *                 free($1);
- *                 $$ = list;
- *             }
- *             | column_list ',' NAME
- *             {
- *                 columns_list_t *list = new_NameList_node($3);
- *                 list->next = $1->next;
- *                 $1->next = list;
- *                 free($3);
- *                 $$ = $1;
- *             }
- *     ; */
+column_list: NAME
+            {
+                columns_list_t *root = new_NameList_node();
+                add_NameList_node(root, $1);
+                free($1);
+                $$ = root;
+            }
+            | column_list ',' NAME
+            {
+                add_NameList_node($1, $3)
+                free($3);
+                $$ = $1;
+            }
+    ;
 
 /* select_opts:                          { $$ = 0; } */
     /* | select_opts ALL                 { if($$ & 01) yyerror("duplicate ALL option"); $$ = $1 | 01; } */
@@ -707,64 +711,72 @@ data_type: BIT opt_length            { struct _DataType data = newDataTypeNode()
 /* delete_stmt: DELETE delete_opts FROM delete_list USING table_references opt_where */
             /* { emit("DELETEMULTI %d %d %d", $2, $4, $6); } */
     /* ; */
-/*  */
-    /* [> insert statement <] */
-/*  */
-/*  */
-/* stmt: insert_stmt { emit("STMT"); } */
-    /* ; */
-/*  */
-/* insert_stmt: INSERT insert_opts opt_into NAME opt_col_names VALUES insert_vals_list opt_ondupupdate */
-                /* { emit("INSERTVALS %d %d %s", $2, $7, $4); free($4); } */
-    /* ; */
-/*  */
-/* opt_ondupupdate: [> nil <] */
-    /* | ONDUPLICATE KEY UPDATE insert_asgn_list { emit("DUPUPDATE %d", $4); } */
-    /* ; */
-/*  */
-/* insert_opts: [> nil <]          { $$ = 0; } */
-    /* | insert_opts LOW_PRIORITY  { $$ = $1 | 01 ; } */
-    /* | insert_opts DELAYED       { $$ = $1 | 02 ; } */
-    /* | insert_opts HIGH_PRIORITY { $$ = $1 | 04 ; } */
-    /* | insert_opts IGNORE        { $$ = $1 | 010 ; } */
-    /* ; */
-/*  */
-/* opt_into: INTO */
-    /* | [> nil <] */
-    /* ; */
-/*  */
-/* opt_col_names: [> nil <] */
-    /* | '(' column_list ')' { emit("INSERTCOLS %d", $2); } */
-    /* ; */
-/*  */
-/* insert_vals_list: '(' insert_vals ')'           { emit("VALUES %d", $2); $$ = 1; } */
-    /* | insert_vals_list ',' '(' insert_vals ')'  { emit("VALUES %d", $4); $$ = $1 + 1; } */
-/*  */
-/* insert_vals: expr               { $$ = 1; } */
-    /* | DEFAULT                   { emit("DEFAULT"); $$ = 1; } */
-    /* | insert_vals ',' expr      { $$ = $1 + 1; } */
-    /* | insert_vals ',' DEFAULT   { emit("DEFAULT"); $$ = $1 + 1; } */
-    /* ; */
-/*  */
-/* insert_stmt: INSERT insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate */
-                    /* { emit("INSERTASGN %d %d %s", $2, $6, $4); free($4); } */
-    /* ; */
-/*  */
-/* insert_stmt: INSERT insert_opts opt_into NAME opt_col_names select_stmt opt_ondupupdate */
-                    /* { emit("INSERTSELECT %d %s", $2, $4); free($4); } */
-    /* ; */
-/*  */
-/* insert_asgn_list: NAME COMPARISON expr { if ($2 != 4) yyerror("bad insert assignment to %s", $1); */
-                    /* emit("ASSIGN %s", $1); free($1); $$ = 1; } */
-    /* | NAME COMPARISON DEFAULT { if ($2 != 4) yyerror("bad insert assignment to %s", $1); */
-                    /* emit("DEFAULT"); emit("ASSIGN %s", $1); free($1); $$ = 1; } */
-    /* | insert_asgn_list ',' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $1); */
-                    /* emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; } */
-    /* | insert_asgn_list ',' NAME COMPARISON DEFAULT { if ($4 != 4) yyerror("bad insert assignment to %s", $1); */
-                    /* emit("DEFAULT"); emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; } */
-    /* ; */
-/*  */
-/*  */
+
+    /* insert statement */
+
+stmt: insert_stmt { mod->root = $1; }
+    ;
+
+insert_stmt: INSERT insert_opts INTO NAME opt_col_names VALUES insert_vals_list opt_ondupupdate
+    {
+        struct _OprtNode *root = new_oprt_node(TS_INSERT);
+        struct _TablList *table = new_tabl_list($4, NULL);
+        struct _SqlOpts *opts = new_SqlOpts_node();
+        opts->optColName_ = $5;
+
+        root->table_ = table;
+        root->options_ = opts;
+
+        free($4);
+    }
+    ;
+
+/* insert_asgn_list 是个啥?,..先放着不写好了.. */
+opt_ondupupdate: /* nil */      {  $$ = 0; }
+    | ONDUPLICATE KEY UPDATE insert_asgn_list { $$ = 1; }
+    ;
+
+insert_asgn_list: { $$ = 0; }
+
+insert_opts: /* nil */          { $$ = 0; }
+    | insert_opts LOW_PRIORITY  { $$ = $1 | __SqlInsOpt_LOWPRI; }
+    | insert_opts DELAYED       { $$ = $1 | __SqlInsOpt_DELAYED; }
+    | insert_opts HIGH_PRIORITY { $$ = $1 | __SqlInsOpt_HIGPRI; }
+    | insert_opts IGNORE        { $$ = $1 | __SqlInsOpt_IGNORE; }
+    ;
+
+opt_col_names: /* nil */
+    | '(' column_list ')' { $$ = $2; }
+    ;
+
+insert_vals_list: '(' insert_vals ')' { $$ = $2; }
+    ;
+
+insert_vals: expr_var               { $$ = 1; }
+    | DEFAULT                   { emit("DEFAULT"); $$ = 1; }
+    | insert_vals ',' expr_var      { $$ = $1 + 1; }
+    | insert_vals ',' DEFAULT   { emit("DEFAULT"); $$ = $1 + 1; }
+    ;
+
+/* insert_stmt: INSERT insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate
+ *                     { emit("INSERTASGN %d %d %s", $2, $6, $4); free($4); }
+ *     ;
+ *
+ * insert_stmt: INSERT insert_opts opt_into NAME opt_col_names select_stmt opt_ondupupdate
+ *                     { emit("INSERTSELECT %d %s", $2, $4); free($4); }
+ *     ; */
+
+/* insert_asgn_list: NAME COMPARISON expr { if ($2 != 4) yyerror("bad insert assignment to %s", $1);
+ *                     emit("ASSIGN %s", $1); free($1); $$ = 1; }
+ *     | NAME COMPARISON DEFAULT { if ($2 != 4) yyerror("bad insert assignment to %s", $1);
+ *                     emit("DEFAULT"); emit("ASSIGN %s", $1); free($1); $$ = 1; }
+ *     | insert_asgn_list ',' NAME COMPARISON expr { if ($4 != 4) yyerror("bad insert assignment to %s", $1);
+ *                     emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
+ *     | insert_asgn_list ',' NAME COMPARISON DEFAULT { if ($4 != 4) yyerror("bad insert assignment to %s", $1);
+ *                     emit("DEFAULT"); emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
+ *     ; */
+
+
     /* [> replace <] */
 /* stmt: replace_stmt { emit("STMT"); } */
     /* ; */
@@ -829,16 +841,14 @@ data_type: BIT opt_length            { struct _DataType data = newDataTypeNode()
 
 /**** expressions ****/
 
-/* expr: NAME              { emit("NAME %s", $1); free($1); }
- *     | USERVAR           { emit("USERVAR %s", $1); free($1); }
- *     | NAME '.' NAME     { emit("FIELDNAME %s.%s", $1, $3); free($1); free($3); }
- *     | STRING            { emit("STRING %s", $1); free($1); }
- *     | INTNUM            { emit("NUMBER %d", $1); }
- *     | APPROXNUM         { emit("FLOAT %g", $1); }
- *     | BOOL              { emit("BOOL %d", $1); }
- *     ;
- *
- * expr: expr '+' expr             { emit("ADD"); }
+expr_var: NAME          { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_NAME; free($1); $$ = tmp; }
+    | USERVAR           { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_USERVAR; free($1); $$ = tmp; }
+    | STRING            { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_STRING; free($1); $$ = tmp; }
+    | INTNUM            { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_INTNUM; $$ = tmp; }
+    | BOOL              { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_BOOL; $$ = tmp; }
+    ;
+
+/* expr: expr '+' expr             { emit("ADD"); }
  *     | expr '-' expr             { emit("SUB"); }
  *     | expr '*' expr             { emit("MUL"); }
  *     | expr '/' expr             { emit("DIV"); }
