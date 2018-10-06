@@ -12,7 +12,6 @@
  *      5. 还没想好,以后再说
  *
  * 2, 3规定只针对`struct' or `class' 的变量
- * 手动 @yurunyang1998
  */
 
 
@@ -22,14 +21,23 @@
 //#include "ast.h"
 #include <vector>
 #include <string>
-
+#include "map"
 namespace Quantum {
+
+
+
+
 
 // 这里是数据库sql应该拥有的变量类型.
 // 用枚举变量便于你后面使用 `switch-case'
     enum _DeclType {
-        DE_INT, DE_SMALLINT, DE_INTEGER, DE_TINYINT, DE_CHAR, DE_VARCHAR, DE_DATE, DE_DECIMAL, DE_NUMERIC
+        DE_INT=1, DE_SMALLINT, DE_INTEGER, DE_TINYINT, DE_CHAR, DE_VARCHAR, DE_DATE, DE_DECIMAL, DE_NUMERIC
     };
+
+
+
+
+
 
     struct _ColType {
         enum _DeclType type_;
@@ -42,6 +50,12 @@ namespace Quantum {
 
         // 这个能不能为空
         bool isAbleNull_;
+
+        // 自动增加
+        bool isAutoInc_;
+
+        // 不知道什么用的index
+        bool isIndex_;
     };
 
 
@@ -60,6 +74,10 @@ namespace Quantum {
         struct _ColType colType_;
 
         struct _ColAttr colAttr_;
+
+        // the value....
+        std::string colVal_;
+        int32_t colValINT_;
     };
 
     struct SqlOptions {
@@ -72,7 +90,7 @@ namespace Quantum {
          * 但他们不是简单的直接这样使用,它们在枚举里面的名字是有TS前缀的...比如`TS_SELECT'. `TS_CREATE'
          * `TS' 前缀意思是 test, 没啥特别含义...后面可能会改掉..
          */
-        enum oprt_type opType_;
+        //enum OprtType opType_;
 
         // 表名, 数据库名字直接给你应该就好了.这个没有什么特别的讲究,
         std::vector<struct TableName> tableListRef_;

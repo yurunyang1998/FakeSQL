@@ -11,6 +11,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <iostream>
+#include "bson_.h"
+#include "bson.h"
 namespace utils
 {
 
@@ -21,11 +23,13 @@ namespace utils
     private:
 
         int fd;
-        char wtdhbw; //whether the datafile has been writen
-
+        //char wtdhbw; //whether the datafile has been writen
+        off64_t nowSeek=0; //where the seek is  And  before the seek ,the file has been writen
 
     public:
         basic_read_write(char * namepath);
+        ~basic_read_write();
+        off64_t write_bsonCouple(bson_::bson_couple *bsonCouple_,uint8_t *bsonBuf);
 
     };
 }
