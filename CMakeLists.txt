@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(FakeSQL)
 
+IF(CMAKE_BUILD_TYPE STREQUAL Debug)
+    ADD_DEFINITIONS(-DDEBUG)
+ENDIF()
+
 ADD_SUBDIRECTORY(src bin)
 ADD_SUBDIRECTORY(tmp_engine)
 ADD_SUBDIRECTORY(test)

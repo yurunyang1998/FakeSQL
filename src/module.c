@@ -32,7 +32,9 @@ int parse_module(module* mod)
     yyscan_t sc;
     int res;
 
+#ifdef DEBUG
     yydebug = 1;
+#endif
 
     yylex_init(&sc);
     yyset_in(mod->src.filefp, sc);

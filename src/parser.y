@@ -52,9 +52,10 @@ struct _DataType newDataTypeNode()
     uint8_t uintval8;
     uint64_t uintval64;
     struct _DataType dataType_t;
-    columns_list_t colList_p;
+    columns_list_t *colList_p;
     
-    struct ExprVar exprVar_t;
+    struct _ExprVar exprVar_t;
+    struct _ExprVarCon *exprVarCon_p;
 }
 
 
@@ -402,7 +403,8 @@ struct _DataType newDataTypeNode()
 %type <dataType_t> data_type
 %type <uintval64> opt_length
 %type <intval> column_atts
-%type <exprVar_t> expr_val
+%type <exprVar_t> expr_var
+%type <exprVarCon_p> insert_vals insert_vals_list
 
 /* emmmm, 未使用的规则的类型声明... */
 %type <intval> opt_ondupupdate insert_asgn_list
@@ -577,7 +579,7 @@ column_list: NAME
             }
             | column_list ',' NAME
             {
-                add_NameList_node($1, $3)
+                add_NameList_node($1, $3);
                 free($3);
                 $$ = $1;
             }
@@ -723,11 +725,11 @@ insert_stmt: INSERT insert_opts INTO NAME opt_col_names VALUES insert_vals_list 
         struct _TablList *table = new_tabl_list($4, NULL);
         struct _SqlOpts *opts = new_SqlOpts_node();
         opts->optColName_ = $5;
-
         root->table_ = table;
         root->options_ = opts;
-
+        root->universalList_.exprVarCon_ = $7;
         free($4);
+        $$ = root;
     }
     ;
 
@@ -752,10 +754,8 @@ opt_col_names: /* nil */
 insert_vals_list: '(' insert_vals ')' { $$ = $2; }
     ;
 
-insert_vals: expr_var               { $$ = 1; }
-    | DEFAULT                   { emit("DEFAULT"); $$ = 1; }
-    | insert_vals ',' expr_var      { $$ = $1 + 1; }
-    | insert_vals ',' DEFAULT   { emit("DEFAULT"); $$ = $1 + 1; }
+insert_vals: expr_var               { struct _ExprVarCon *root = new_ExprVarCon_node(); add_ExprVar_node(root, $1); $$ = root; }
+    | insert_vals ',' expr_var      { add_ExprVar_node($1, $3); $$ = $1; }
     ;
 
 /* insert_stmt: INSERT insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate
@@ -841,11 +841,13 @@ insert_vals: expr_var               { $$ = 1; }
 
 /**** expressions ****/
 
-expr_var: NAME          { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_NAME; free($1); $$ = tmp; }
-    | USERVAR           { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_USERVAR; free($1); $$ = tmp; }
-    | STRING            { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_STRING; free($1); $$ = tmp; }
-    | INTNUM            { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_INTNUM; $$ = tmp; }
-    | BOOL              { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp->type_ = __Sql_BOOL; $$ = tmp; }
+expr_var: NAME          { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_NAME; free($1); $$ = tmp; }
+    | USERVAR           { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_USERVAR; free($1); $$ = tmp; }
+    | STRING            { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_STRING; free($1); $$ = tmp; }
+    /* TODO: fix it...
+    | INTNUM            { struct _ExprVar tmp; strncpy(tmp.data_, $1, sizeof($1)); tmp.type_ = __Sql_INTNUM; $$ = tmp; }
+    | BOOL              { struct _ExprVar tmp; strncpy(tmp.data_, $1, sizeof($1)); tmp.type_ = __Sql_BOOL; $$ = tmp; }
+    */
     ;
 
 /* expr: expr '+' expr             { emit("ADD"); }
@@ -980,7 +982,5 @@ void yyerror(const char *s, ...)
 {
     va_list ap;
     va_start(ap, s);
-    fprintf(stderr, "error: ");
     vfprintf(stderr, s, ap);
-
 }

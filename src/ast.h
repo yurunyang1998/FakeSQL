@@ -110,6 +110,7 @@ struct _NameList;
 struct _kv_pair;
 struct _SqlOpts;
 struct _DefOpts;
+struct _ExprVarCon;
 
 struct _OprtNode
 {
@@ -120,12 +121,19 @@ struct _OprtNode
      * In case users are specified in `name.name'
      */
     struct _TablList *table_;
-    
+
+    // universalList_ 是一个非常诡异的`List', 因为它已经被我改的面目全非了...
+    // Sql 语句实在太复杂了...感觉自己很难找到一种特别规整的树来把它的逻辑结构很有层次的表示出来...
     struct
     {
+        // 它只用于create table语句...在其他语句里面很难复用
         struct _DefOpts *defOpts_;
+
+        // 它应该是column 的reference...名字起的有问题...
         struct _NameList *tableNameList_;
-        // TODO: and other structure?
+
+        // This is a container. It storage the `ExprVar' in the default...
+        struct _ExprVarCon *exprVarCon_;
     } universalList_;
     
     struct _SqlOpts *options_;
@@ -226,7 +234,15 @@ struct _ExprVar {
     char data_[16];
 };
 
+// structure `_ExprVar' 's container..
+struct _ExprVarCon {
+    struct _ExprVar data_;
+    struct _ExprVarCon *next;
+};
 
+struct _ExprVarCon *new_ExprVarCon_node();
+void add_ExprVar_node(struct _ExprVarCon *root, struct _ExprVar node);
+void del_ExprVarCon_node(struct _ExprVarCon *);
 
 #ifdef __cplusplus
 }

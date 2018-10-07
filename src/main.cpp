@@ -20,9 +20,9 @@ int main(int argc, const char *argv[])
     delete_module(mod);
 
     if(res == 0) {
-        std::cout << "Success!" << std::endl;
+        std::cout << "\nSuccess!" << std::endl;
     } else {
-        std::cout << "Failure.." << std::endl;
+        std::cout << "\nFailure.." << std::endl;
     }
 
     return 0;

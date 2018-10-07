@@ -176,8 +176,12 @@ void del_oprt_node(struct _OprtNode *node)
     case TS_CREATE:
         del_DefOpts_node(node->universalList_.defOpts_);
         break;
-    case TS_INSERT:
-        del_NameList_node(node->universalList_.tableNameList_);
+    case TS_INSERT: {
+        del_ExprVarCon_node(node->universalList_.exprVarCon_);
+//        if(node->universalList_.defOpts_ != NULL) {
+//            del_SqlOpts_node(node->universalList_.defOpts_);
+//        }
+    }
         break;
     default:
         // mei xiang hao
@@ -211,13 +215,13 @@ void del_tabl_list(struct _TablList *list)
 {
     assert(list != NULL);
 
-    struct _TablList *head = list->next;
+    struct _TablList *head = list;
 
-    while(head != NULL) {
-        free(list);
-        list = head;
+    while(list != NULL) {
+        free(head);
 
-        head = head->next;
+        list = list->next;
+        head = list;
     }
 }
 
@@ -249,13 +253,13 @@ void add_NameList_node(columns_list_t *node, const char *ref)
 void del_NameList_node(columns_list_t *node)
 {
     assert(node != NULL);
-    struct _NameList *head = node->next;
+    struct _NameList *head = node;
 
-    while(head != NULL) {
-        free(node);
-        node = head;
+    while(node != NULL) {
+        free(head);
 
-        head = head->next;
+        node = node->next;
+        head = node;
     }
 }
 
@@ -289,12 +293,12 @@ void del_kvPair_node(struct _kv_pair *kv)
 {
     assert(kv != NULL);
 
-    struct _kv_pair *head = kv->next;
-    while(head != NULL) {
-        free(kv);
-        kv = head;
+    struct _kv_pair *head = kv;
+    while(kv != NULL) {
+        free(head);
 
-        head = head->next;
+        kv = kv->next;
+        head = kv;
     }
 }
 
@@ -338,7 +342,43 @@ struct _SqlOpts *new_SqlOpts_node()
 void del_SqlOpts_node(struct _SqlOpts *node)
 {
     assert(node != NULL);
+    del_NameList_node(node->optColName_);
     free(node);
+}
+
+
+struct _ExprVarCon *new_ExprVarCon_node()
+{
+    struct _ExprVarCon *root = (struct _ExprVarCon *)malloc(sizeof(struct _ExprVarCon));
+    assert(root != NULL);
+
+    bzero(root, sizeof(struct _ExprVarCon));
+    return root;
+}
+
+void add_ExprVar_node(struct _ExprVarCon *root, struct _ExprVar node)
+{
+    assert(root != NULL);
+    struct _ExprVarCon *head = (struct _ExprVarCon *)malloc(sizeof(struct _ExprVarCon));
+    assert(head != NULL);
+
+    head->data_ = node;
+    head->next = root->next;
+    root->next = head;
+}
+
+
+void del_ExprVarCon_node(struct _ExprVarCon *root)
+{
+    assert(root != NULL);
+
+    struct _ExprVarCon *tmp = root;
+    while(root != NULL) {
+        free(tmp);
+
+        root = root->next;
+        tmp = root;
+    }
 }
 
 #ifdef __cplusplus
