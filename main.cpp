@@ -48,20 +48,12 @@ int main() {
     string attr("attr");
     string value("value");
     b.insert_UTF8_value("111", "222");
-    //b.insert_int32_value("1111", 683);
+    b.insert_int32_value("1111", 683);
 
-    bson_::bson_couple b2;
-    string attr2("attrattr");
-    string value2("valuevlaue");
-    b2.insert_UTF8_value("333","444");
-    //b2.insert_int32_value("int32",453);
 
-    bson_::bson_couple b3;
-    b3.insert_UTF8_value("555","666");
-
-    bs.write_bsonCouple(&b3,b3.getBsonBuf());
-    bs.write_bsonCouple(&b2,b2.getBsonBuf());
-    bs.write_bsonCouple(&b,b.getBsonBuf());
+     bs.write_bsonCouple(&b,b.getBsonBuf());
+//    bs.write_bsonCouple(&b2,b2.getBsonBuf());
+//    bs.write_bsonCouple(&b,b.getBsonBuf());
 //    bson_writer_t *writer;
 //    uint8_t *buf = NULL;
 //    size_t buflen = 0;

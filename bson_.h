@@ -18,14 +18,14 @@ namespace bson_
     private:
         bson_t *b;
         bson_writer_t *writer;
-        uint8_t *buf = NULL;
-        size_t buflen = 0;
+        uint8_t *buf;
+        size_t buflen;
 
 
     public:
         bson_couple();
         ~bson_couple();
-
+        bson_t * get_bson();
         void  insert_UTF8_value(std::string attribute,std::string value);
         void  insert_int32_value(std::string attribute,int32_t value);
         size_t  getBsonLength();
