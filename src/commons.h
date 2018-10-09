@@ -30,7 +30,9 @@ static uint8_t __Sql_USERVAR = 0x04;
 static uint8_t __Sql_STRING = 0x08;
 static uint8_t __Sql_BOOL = 0x10;
 
-
+static uint8_t __SqlDelOpt_LOWPRI = 0x01;
+static uint8_t __SqlDelOpt_QUICK = 0x02;
+static uint8_t __SqlDelOpt_IGNORE = 0x04;
 
 
 #endif //COMMONS_H

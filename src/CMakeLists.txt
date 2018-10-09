@@ -14,17 +14,22 @@ BISON_TARGET(parser parser.y    ${CMAKE_CURRENT_BINARY_DIR}/parser.c)
 
 ADD_FLEX_BISON_DEPENDENCY(scanner parser)
 
+INCLUDE_DIRECTORIES(net)
+
+SET(NETSRC net/socket.hpp net/socket.cpp
+        net/netutils.hpp net/netutils.cpp
+        net/epoller.hpp net/epoller.cpp
+        net/thread_loop.hpp net/thread_loop.cpp)
+
 ADD_EXECUTABLE(FakeSQL
         main.cpp commons.h
         ${BISON_parser_OUTPUTS}
         ${FLEX_scanner_OUTPUTS}
         ast.c ast.h
         module.c module.h
-        socket.cpp socket.hpp
-        netutils.cpp netutils.hpp
-        epoller.cpp epoller.hpp
-        thread_loop.cpp thread_loop.hpp
         hyperfine_structure.hpp
+
+        ${NETSRC}
         )
 
 set(CMAKE_CXX_STANDARD 11)

@@ -24,7 +24,8 @@
 void emit(char *s, ...);
 void yyerror(const char *s, ...);
 
-struct _DataType newDataTypeNode()
+// 用于内部数据结构的初始化, 在line:492~ 之后调用...
+static struct _DataType newDataTypeNode()
 {
     struct _DataType data;
     bzero(&data, sizeof(struct _DataType));
@@ -396,10 +397,10 @@ struct _DataType newDataTypeNode()
 %token FDATE_ADD FDATE_SUB
 %token FCOUNT
 
-%type <oprtNode_p> create_table_stmt insert_stmt
+%type <oprtNode_p> create_table_stmt insert_stmt delete_stmt
 %type <defOpts_p> create_col_list create_definition
 %type <colList_p> column_list opt_col_names
-%type <uintval8> opt_binary opt_uz insert_opts
+%type <uintval8> opt_binary opt_uz insert_opts delete_opts
 %type <dataType_t> data_type
 %type <uintval64> opt_length
 %type <intval> column_atts
@@ -531,10 +532,10 @@ data_type: BIT opt_length            { struct _DataType data = newDataTypeNode()
         /* $$ = new_sexp_node(ST_LIST, $5); */
      /* } */
     /* ; */
-/*  */
-/* opt_where: [> nil <] */
-    /* | WHERE expr { emit("WHERE"); }; */
-/*  */
+
+opt_where: /* nil */ { $$ = NULL; }
+    | WHERE expr { emit("WHERE"); };
+
 /* opt_groupby: [> nil <]  */
     /* | GROUP BY groupby_list opt_with_rollup { emit("GROUPBYLIST %d %d", $3, $4); } */
     /* ; */
@@ -685,34 +686,43 @@ column_list: NAME
     /* ; */
 /*  */
 /*  */
-    /* [> delete statement <] */
-/*  */
-/* stmt: delete_stmt { emit("STMT"); } */
-    /* ; */
-/*  */
-/* delete_stmt: DELETE delete_opts FROM NAME opt_where opt_orderby opt_limit */
-                  /* { emit("DELETEONE %d %s", $2, $4); free($4); } */
-    /* ; */
-/*  */
-/* delete_opts: delete_opts LOW_PRIORITY { $$ = $1 + 01; } */
-    /* | delete_opts QUICK { $$ = $1 + 02; } */
-    /* | delete_opts IGNORE { $$ = $1 + 04; } */
-    /* | [> nil <] { $$ = 0; } */
-    /* ; */
-/*  */
-/* delete_stmt: DELETE delete_opts delete_list */
-    /* FROM table_references opt_where { emit("DELETEMULTI %d %d %d", $2, $3, $5); } */
-/*  */
-/* delete_list: NAME opt_dot_star { emit("TABLE %s", $1); free($1); $$ = 1; } */
-    /* | delete_list ',' NAME opt_dot_star { emit("TABLE %s", $3); free($3); $$ = $1 + 1; } */
-    /* ; */
-/*  */
-/* opt_dot_star: [> nil <] | '.' '*' */
-    /* ; */
-/*  */
-/* delete_stmt: DELETE delete_opts FROM delete_list USING table_references opt_where */
-            /* { emit("DELETEMULTI %d %d %d", $2, $4, $6); } */
-    /* ; */
+    /* delete statement */
+
+stmt: delete_stmt { mod->root = $1; }
+    ;
+
+delete_stmt: DELETE delete_opts FROM NAME opt_where opt_limit
+            {
+                struct _OprtNode *root = new_oprt_node(TS_DELETE);
+                struct _TablList *table = new_tabl_list($4, NULL);
+                struct _SqlOpts *opts = new_SqlOpts_node();
+                opts->options_->delOpts_ = $2;
+
+                root->table_ = table;
+                free($4);
+                $$ = root;
+            }
+    ;
+
+delete_opts: delete_opts LOW_PRIORITY { $$ = $1 | __SqlDelOpt_LOWPRI; }
+    | delete_opts QUICK { $$ = $1 | __SqlDelOpt_QUICK; }
+    | delete_opts IGNORE { $$ = $1 | __SqlDelOpt_IGNORE; }
+    | /* nil */ { $$ = 0; }
+    ;
+
+delete_stmt: DELETE delete_opts delete_list
+    FROM table_references opt_where { emit("DELETEMULTI %d %d %d", $2, $3, $5); }
+
+delete_list: NAME opt_dot_star { emit("TABLE %s", $1); free($1); $$ = 1; }
+    | delete_list ',' NAME opt_dot_star { emit("TABLE %s", $3); free($3); $$ = $1 + 1; }
+    ;
+
+opt_dot_star: /* nil */ | '.' '*'
+    ;
+
+/* delete_stmt: DELETE delete_opts FROM delete_list USING table_references opt_where
+ *             { emit("DELETEMULTI %d %d %d", $2, $4, $6); }
+ *     ; */
 
     /* insert statement */
 
@@ -844,10 +854,26 @@ insert_vals: expr_var               { struct _ExprVarCon *root = new_ExprVarCon_
 expr_var: NAME          { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_NAME; free($1); $$ = tmp; }
     | USERVAR           { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_USERVAR; free($1); $$ = tmp; }
     | STRING            { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_STRING; free($1); $$ = tmp; }
-    /* TODO: fix it...
-    | INTNUM            { struct _ExprVar tmp; strncpy(tmp.data_, $1, sizeof($1)); tmp.type_ = __Sql_INTNUM; $$ = tmp; }
-    | BOOL              { struct _ExprVar tmp; strncpy(tmp.data_, $1, sizeof($1)); tmp.type_ = __Sql_BOOL; $$ = tmp; }
-    */
+    | INTNUM
+    {
+        struct _ExprVar tmp;
+        char buf[16];
+        bzero(buf, sizeof(buf));
+        sprintf(buf, "%d", $1);
+        strncpy(tmp.data_, buf, strlen(buf);
+        tmp.type_ = __Sql_INTNUM;
+        $$ = tmp;
+    }
+    | BOOL
+    {
+        struct _ExprVar tmp;
+        char buf[2];
+        bzero(buf, sizeof(buf));
+        sptrintf(buf, "%d", $1);
+        strncpy(tmp.data_, buf, strlen(buf));
+        tmp.type_ = __Sql_BOOL;
+        $$ = tmp;
+    }
     ;
 
 /* expr: expr '+' expr             { emit("ADD"); }

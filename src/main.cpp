@@ -13,7 +13,8 @@ int main(int argc, const char *argv[])
                   "FirstName varchar(255),\n"
                   "Address varchar(255),\n"
                   "City varchar(255)\n"
-                  ");";
+                  ");\n\n"
+                  "INSERT INTO Persons (LastName, Address) VALUES ('Wilson', 'Champs-Elysees');";
 
     mod = new_module_from_string(demo);
     res = parse_module(mod);

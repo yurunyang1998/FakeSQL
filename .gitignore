@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 # Prerequisites
 *.d
 
-=======
->>>>>>> branch
 # Compiled Object files
 *.slo
 *.lo
@@ -21,10 +18,7 @@
 
 # Fortran module files
 *.mod
-<<<<<<< HEAD
 *.smod
-=======
->>>>>>> branch
 
 # Compiled Static libraries
 *.lai
@@ -37,7 +31,6 @@
 *.out
 *.app
 
-<<<<<<< HEAD
 # Jetbrain
 .idea/
 cmake-build-debug/
@@ -47,8 +40,6 @@ scanner.h
 
 #test
 test.sql
-=======
 # Jetbrains
 .idea/
 cmake-build-debug/
->>>>>>> branch

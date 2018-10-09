@@ -381,6 +381,22 @@ void del_ExprVarCon_node(struct _ExprVarCon *root)
     }
 }
 
+
+struct _DelSetceOpts *new_DelSetceOpts_node()
+{
+    struct _DelSetceOpts *root = (struct _DelSetceOpts *)malloc(sizeof(struct _DelSetceOpts));
+
+    bzero(root, sizeof(struct _DelSetceOpts));
+    return root;
+}
+
+void del_DelSetceOpts_node(struct _DelSetceOpts *root)
+{
+    assert(root != NULL);
+
+    free(root);
+}
+
 #ifdef __cplusplus
 }
 #endif

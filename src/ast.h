@@ -111,6 +111,7 @@ struct _kv_pair;
 struct _SqlOpts;
 struct _DefOpts;
 struct _ExprVarCon;
+struct _DelSetceOpts;
 
 struct _OprtNode
 {
@@ -195,11 +196,21 @@ struct _TablList {
     struct _TablList *next;
 };
 
+// 全称应该是: delete sentence options...帮助记忆...
+struct _DelSetceOpts {
+    uint8_t optsDel_;       // 标志诸如`QUICK', `LOW PRIORITY' 等选项..
+
+    // opt_where
+
+    // opt_limit
+};
+
 
 struct _SqlOpts {
     struct _NameList *optColName_;
 
-    char test[32];
+    /* 下面的成员用于delete语句使用 */
+    struct _DelSetceOpts *delOpts_;
 };
 
 // alias...
@@ -217,6 +228,8 @@ columns_list_t *new_NameList_node();
 void add_NameList_node(columns_list_t *head, const char *ref);
 void del_NameList_node(columns_list_t *root);
 
+
+// kv_pair 目前一直还没有用到..select语句完成后将计划其移除
 struct _kv_pair *new_kvPair_node(char *key, char *value);
 void add_kvPair_node(struct _kv_pair *list, char *key, char *value);
 void del_kvPair_node(struct _kv_pair *kv);
@@ -227,6 +240,9 @@ void del_DefOpts_node(struct _DefOpts *node);
 struct _SqlOpts *new_SqlOpts_node();
 void del_SqlOpts_node(struct _SqlOpts *node);
 
+
+struct _DelSetceOpts *new_DelSetceOpts_node();
+void del_DelSetceOpts_node(struct _DelSetceOpts *root);
 
 // TODO:parser 里的expr规则需要重新建立树...
 struct _ExprVar {
