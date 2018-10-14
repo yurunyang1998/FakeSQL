@@ -201,7 +201,7 @@ struct _DelSetceOpts {
     uint8_t optsDel_;       // 标志诸如`QUICK', `LOW PRIORITY' 等选项..
 
     // opt_where
-
+    struct _Expr;
     // opt_limit
 };
 

@@ -54,6 +54,7 @@ static struct _DataType newDataTypeNode()
     uint64_t uintval64;
     struct _DataType dataType_t;
     columns_list_t *colList_p;
+    struct _TablList *tablList_p;
     
     struct _ExprVar exprVar_t;
     struct _ExprVarCon *exprVarCon_p;
@@ -404,6 +405,7 @@ static struct _DataType newDataTypeNode()
 %type <dataType_t> data_type
 %type <uintval64> opt_length
 %type <intval> column_atts
+%type <tablList_p> table_references
 %type <exprVar_t> expr_var
 %type <exprVarCon_p> insert_vals insert_vals_list
 
@@ -533,8 +535,8 @@ data_type: BIT opt_length            { struct _DataType data = newDataTypeNode()
      /* } */
     /* ; */
 
-opt_where: /* nil */ { $$ = NULL; }
-    | WHERE expr { emit("WHERE"); };
+/* opt_where: [> nil <] { $$ = NULL; }
+ *     | WHERE expr { emit("WHERE"); }; */
 
 /* opt_groupby: [> nil <]  */
     /* | GROUP BY groupby_list opt_with_rollup { emit("GROUPBYLIST %d %d", $3, $4); } */
@@ -603,30 +605,29 @@ column_list: NAME
     /* ; */
 /*  */
 /* select_expr: expr opt_as_alias ; */
-/*  */
-/* table_references: table_reference           { $$ = 1; } */
-    /* | table_references ',' table_reference  { $$ = $1 + 1; } */
-    /* ; */
-/*  */
-/* table_reference: table_factor */
-    /* | join_table */
-    /* ; */
-/*  */
-/* table_factor: NAME opt_as_alias index_hint  { emit("TABLE %s", $1); free($1); } */
-    /* | NAME '.' NAME opt_as_alias index_hint { emit("TABLE %s.%s", $1, $3); free($1); free($3); } */
-    /* | table_subquery opt_as NAME            { emit("SUBQUERYAS %s", $3); free($3); } */
-    /* | '(' table_references ')'              { emit("TABLEREFERENCES %d", $2); } */
-    /* ; */
-/*  */
+
+table_references: table_reference           { $$ = 1; }
+    | table_references ',' table_reference  { $$ = $1 + 1; }
+    ;
+
+table_reference: table_factor
+    ;
+
+table_factor: NAME opt_as_alias index_hint  { emit("TABLE %s", $1); free($1); }
+    | NAME '.' NAME opt_as_alias index_hint { emit("TABLE %s.%s", $1, $3); free($1); free($3); }
+    | table_subquery opt_as NAME            { emit("SUBQUERYAS %s", $3); free($3); }
+    | '(' table_references ')'              { emit("TABLEREFERENCES %d", $2); }
+    ;
+
 /* opt_as: AS */
     /* | [> nil <] */
     /* ; */
-/*  */
-/* opt_as_alias: AS NAME   { emit ("ALIAS %s", $2); free($2); } */
-    /* | NAME              { emit ("ALIAS %s", $1); free($1); } */
-    /* | [> nil <] */
-    /* ; */
-/*  */
+
+opt_as_alias: AS NAME   { emit ("ALIAS %s", $2); free($2); }
+    | NAME              { emit ("ALIAS %s", $1); free($1); }
+    | /* nil */
+    ;
+
 /* join_table: table_reference opt_inner_cross JOIN table_factor opt_join_condition */
                   /* { emit("JOIN %d", 0100+$2); } */
     /* | table_reference STRAIGHT_JOIN table_factor */
@@ -664,24 +665,24 @@ column_list: NAME
 /* join_condition: ON expr { emit("ONEXPR"); } */
     /* | USING '(' column_list ')' { emit("USING %d", $3); } */
     /* ; */
-/*  */
-/* index_hint: USE KEY opt_for_join '(' index_list ')' */
-                  /* { emit("INDEXHINT %d %d", $5, 010+$3); } */
-    /* | IGNORE KEY opt_for_join '(' index_list ')' */
-                  /* { emit("INDEXHINT %d %d", $5, 020+$3); } */
-    /* | FORCE KEY opt_for_join '(' index_list ')' */
-                  /* { emit("INDEXHINT %d %d", $5, 030+$3); } */
-    /* | [> nil <] */
-    /* ; */
-/*  */
+
+/* index_hint: USE KEY opt_for_join '(' index_list ')'
+ *                   { emit("INDEXHINT %d %d", $5, 010+$3); }
+ *     | IGNORE KEY opt_for_join '(' index_list ')'
+ *                   { emit("INDEXHINT %d %d", $5, 020+$3); }
+ *     | FORCE KEY opt_for_join '(' index_list ')'
+ *                   { emit("INDEXHINT %d %d", $5, 030+$3); }
+ *     | [> nil <]
+ *     ; */
+
 /* opt_for_join: FOR JOIN { $$ = 1; } */
     /* | [> nil <]        { $$ = 0; } */
     /* ; */
-/*  */
-/* index_list: NAME  { emit("INDEX %s", $1); free($1); $$ = 1; } */
-    /* | index_list ',' NAME { emit("INDEX %s", $3); free($3); $$ = $1 + 1; } */
-    /* ; */
-/*  */
+
+/* index_list: NAME  { emit("INDEX %s", $1); free($1); $$ = 1; }
+ *     | index_list ',' NAME { emit("INDEX %s", $3); free($3); $$ = $1 + 1; }
+ *     ; */
+
 /* table_subquery: '(' select_stmt ')' { emit("SUBQUERY"); } */
     /* ; */
 /*  */
@@ -711,7 +712,13 @@ delete_opts: delete_opts LOW_PRIORITY { $$ = $1 | __SqlDelOpt_LOWPRI; }
     ;
 
 delete_stmt: DELETE delete_opts delete_list
-    FROM table_references opt_where { emit("DELETEMULTI %d %d %d", $2, $3, $5); }
+    FROM table_references opt_where
+    {
+        struct _OprtNode *root = new_oprt_node(TS_DELETE);
+        struct _TablList *table = $5;
+        struct _SqlOpts *opts = new_SqlOpts_node();
+        emit("DELETEMULTI %d %d %d", $2, $3, $5);
+    }
 
 delete_list: NAME opt_dot_star { emit("TABLE %s", $1); free($1); $$ = 1; }
     | delete_list ',' NAME opt_dot_star { emit("TABLE %s", $3); free($3); $$ = $1 + 1; }
