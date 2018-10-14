@@ -45,14 +45,14 @@ int main() {
 
     bson_::bson_couple b;
 
-//    b.insert_UTF8_value("111", "222");
-//    b.insert_int32_value("1111", 683);
-//    uint8_t  *buf;
-//    buf = b.getBsonBuf();
-//    //b.rebuildFromBuffer(buf);
-//    bs.write_bsonCouple(&b,b.getBsonBuf());
+    b.insert_UTF8_value("111", "222");
+    b.insert_int32_value("1111", 683);
+    uint8_t  *buf;
+    buf = b.getBsonBuf();
+    //b.rebuildFromBuffer(buf);
+    bs.write_bsonCouple(&b,b.getBsonBuf());
     std::shared_ptr<uint8_t > bufPtr;
-    bufPtr = bs.read_bsonCouple(8);
+    bufPtr = bs.read_bsonCouple(1008);
     b.rebuildFromBuffer(bufPtr.get());
 
 

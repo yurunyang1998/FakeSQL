@@ -28,6 +28,7 @@ basic_read_write::basic_read_write(char *namepath) {
         //char whethe_initial ='0';
         nowSeek = 0;
         write(fd,&nowSeek,sizeof(nowSeek));
+        nowSeek+=8;
         cout<<sizeof(nowSeek);
         //wtdhbw = '0';
     }
