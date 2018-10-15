@@ -17,7 +17,7 @@ cd FakeSQL
 mkdir build && cd build
 # For Debug
 cmake .. -DCMAKE_BUILD_TYPE=Debug
-# For release
+# For Release
 cmake .. 
 make -j2
 ```
