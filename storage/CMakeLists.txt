@@ -5,7 +5,7 @@ find_package(libbson-1.0)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES main.cpp hyperfine_structure.cpp B-tree_nodes.hpp B-tree-initial.hpp pub_friends.hpp file_read_write_system.h file_read_write_system.cpp bson_.cpp)
+set(SOURCE_FILES main.cpp  B-tree_nodes.hpp B-tree-initial.hpp pub_friends.hpp file_read_write_system.h file_read_write_system.cpp bson_.cpp hyperfine_structure.cpp interfaceManager.cpp interfaceManager.h)
 
 find_package(libbson-1.0)
 
