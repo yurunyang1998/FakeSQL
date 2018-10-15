@@ -1,7 +1,7 @@
 
 #include <iostream>
 #include "vector"
-
+#include "memory"
 #include "B-tree-initial.hpp"
 #include "file_read_write_system.h"
 #include <random>
@@ -43,15 +43,21 @@ int main() {
 
     basic_read_write    bs("./test.txt");
 
-
     bson_::bson_couple b;
-    string attr("attr");
-    string value("value");
+
     b.insert_UTF8_value("111", "222");
     b.insert_int32_value("1111", 683);
+    uint8_t  *buf;
+    buf = b.getBsonBuf();
+    //b.rebuildFromBuffer(buf);
+    bs.write_bsonCouple(&b,b.getBsonBuf());
+    std::shared_ptr<uint8_t > bufPtr;
+    bufPtr = bs.read_bsonCouple(1008);
+    b.rebuildFromBuffer(bufPtr.get());
 
 
-     bs.write_bsonCouple(&b,b.getBsonBuf());
+
+
 //    bs.write_bsonCouple(&b2,b2.getBsonBuf());
 //    bs.write_bsonCouple(&b,b.getBsonBuf());
 //    bson_writer_t *writer;

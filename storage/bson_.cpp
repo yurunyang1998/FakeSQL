@@ -62,6 +62,24 @@ void bson_couple::insert_int32_value(std::string attribute, int32_t value) {
     assert(result != 0);
 }
 
+bson_t* bson_couple::rebuildFromBuffer(const uint8_t *buf) {
+    bson_reader_t *reader = bson_reader_new_from_data(buf,500);
+    char * str;
+    const bson_t *bsomTemp_;
+    while ((bsomTemp_  = bson_reader_read (reader, NULL))) {
+        str = bson_as_canonical_extended_json (bsomTemp_, NULL);
+        fprintf (stdout, "%s\n", str);
+        bson_free (str);
+    }
+
+    /*
+     * Cleanup after our reader, which closes the file descriptor.
+     */
+    bson_reader_destroy (reader);
+
+}
+
+
 uint8_t* bson_couple::getBsonBuf() {
     return this->buf;
 }

@@ -30,7 +30,7 @@ namespace bson_
         void  insert_int32_value(std::string attribute,int32_t value);
         size_t  getBsonLength();
         uint8_t*  getBsonBuf();
-
+        bson_t* rebuildFromBuffer(const uint8_t * buf);
 
 
     };
