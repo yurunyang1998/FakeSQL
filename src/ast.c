@@ -20,137 +20,137 @@ extern "C" {
 
 #endif
 
-
-ast_node_atom *new_atom_node(enum atom_types type, void *v)
-{
-    ast_node_atom *node = (ast_node_atom *)malloc(sizeof(ast_node_atom));
-    node->type = type;
-
-    switch(type) {
-    case AT_IDENTIFIER:
-    case AT_STRING:
-        node->value.string = (char *) malloc(strlen((char *) v) + 1);
-        strcpy(node->value.string, (char *) v);
-        break;
-    case AT_NUMBER:
-        node->value.number = *((long *) v);
-        break;
-    case AT_CONDITION:
-        node->value.subtok = *((int *)v);
-        break;
-    }
-    return node;
-}
-
-
-void add_atom_to_sexp(ast_node_sexp *_node, ast_node_atom *_item)
-{
-    ast_node_sexp *_next = (ast_node_sexp *)malloc(sizeof(ast_node_sexp));
-    bzero(_next, sizeof(ast_node_sexp));
-    _next->type = ST_NONE;
-    _node->type = ST_LIST;
-
-    _node->value.atom = _item;
-    _node->next = _next;
-    _next->next = NULL;
-}
-
-void delete_atom_node(ast_node_atom* node)
-{
-    switch(node->type) {
-    case AT_IDENTIFIER:
-    case AT_STRING:
-        free(node->value.string);
-        break;
-    case AT_NUMBER:
-        break;
-    }
-    free(node);
-}
-
-void print_node_atom(ast_node_atom* node)
-{
-    if(node->type == AT_IDENTIFIER) {
-        printf("identifier node: %s\n", node->value.string);
-    }
-    else if(node->type == AT_STRING) {
-        printf("string node: %s\n", node->value.string);
-    }
-    else if(node->type == AT_NUMBER) {
-        printf("number node: %ld\n", node->value.number);
-    }
-    else if(node->type == AT_CONDITION) {
-        printf("condition node's type: %d\n", node->value.subtok);
-    }
-    else {
-        printf("unknown atom node");
-    }
-}
-
-ast_node_sexp *new_sexp_node(enum sexp_types type, void *v)
-{
-    ast_node_sexp *node = (ast_node_sexp *)malloc(sizeof(ast_node_sexp));
-    node->type = type;
-    node->next = NULL;
-
-    switch(type) {
-        case ST_ATOM:
-            node->value.atom = (ast_node_atom*) v;
-            break;
-
-    }
-    return node;
-}
-
-void delete_sexp_node(ast_node_sexp *node)
-{
-    switch(node->type) {
-    case ST_ATOM:
-        delete_atom_node(node->value.atom);
-        break;
-    }
-    free(node);
-}
-
-void print_node_sexp(ast_node_sexp *node)
-{
-    if(node->type == ST_ATOM) {
-        printf("node is an atom: ");
-        print_node_atom(node->value.atom);
-    }
-    else {
-        printf("node is a what?\n");
-    }
-}
-
-
-ast_node_opts *new_opts_node(enum opts_types type, void *v)
-{
-    ast_node_opts *node = (ast_node_opts *)malloc(sizeof(ast_node_opts));
-    node->type = type;
-
-    switch(type) {
-    case OP_WHERE:
-        break;
-    }
-}
-
-void delete_opts_node(ast_node_opts *node)
-{
-    switch(node->type) {
-    case OP_HAVING:
-        break;
-    case OP_GROUPBY:
-        break;
-    case OP_LIMIT:
-        break;
-    case OP_ORDERBY:
-        break;
-    case OP_WHERE:
-        break;
-    }
-    free(node);
-}
+//
+//ast_node_atom *new_atom_node(enum atom_types type, void *v)
+//{
+//    ast_node_atom *node = (ast_node_atom *)malloc(sizeof(ast_node_atom));
+//    node->type = type;
+//
+//    switch(type) {
+//    case AT_IDENTIFIER:
+//    case AT_STRING:
+//        node->value.string = (char *) malloc(strlen((char *) v) + 1);
+//        strcpy(node->value.string, (char *) v);
+//        break;
+//    case AT_NUMBER:
+//        node->value.number = *((long *) v);
+//        break;
+//    case AT_CONDITION:
+//        node->value.subtok = *((int *)v);
+//        break;
+//    }
+//    return node;
+//}
+//
+//
+//void add_atom_to_sexp(ast_node_sexp *_node, ast_node_atom *_item)
+//{
+//    ast_node_sexp *_next = (ast_node_sexp *)malloc(sizeof(ast_node_sexp));
+//    bzero(_next, sizeof(ast_node_sexp));
+//    _next->type = ST_NONE;
+//    _node->type = ST_LIST;
+//
+//    _node->value.atom = _item;
+//    _node->next = _next;
+//    _next->next = NULL;
+//}
+//
+//void delete_atom_node(ast_node_atom* node)
+//{
+//    switch(node->type) {
+//    case AT_IDENTIFIER:
+//    case AT_STRING:
+//        free(node->value.string);
+//        break;
+//    case AT_NUMBER:
+//        break;
+//    }
+//    free(node);
+//}
+//
+//void print_node_atom(ast_node_atom* node)
+//{
+//    if(node->type == AT_IDENTIFIER) {
+//        printf("identifier node: %s\n", node->value.string);
+//    }
+//    else if(node->type == AT_STRING) {
+//        printf("string node: %s\n", node->value.string);
+//    }
+//    else if(node->type == AT_NUMBER) {
+//        printf("number node: %ld\n", node->value.number);
+//    }
+//    else if(node->type == AT_CONDITION) {
+//        printf("condition node's type: %d\n", node->value.subtok);
+//    }
+//    else {
+//        printf("unknown atom node");
+//    }
+//}
+//
+//ast_node_sexp *new_sexp_node(enum sexp_types type, void *v)
+//{
+//    ast_node_sexp *node = (ast_node_sexp *)malloc(sizeof(ast_node_sexp));
+//    node->type = type;
+//    node->next = NULL;
+//
+//    switch(type) {
+//        case ST_ATOM:
+//            node->value.atom = (ast_node_atom*) v;
+//            break;
+//
+//    }
+//    return node;
+//}
+//
+//void delete_sexp_node(ast_node_sexp *node)
+//{
+//    switch(node->type) {
+//    case ST_ATOM:
+//        delete_atom_node(node->value.atom);
+//        break;
+//    }
+//    free(node);
+//}
+//
+//void print_node_sexp(ast_node_sexp *node)
+//{
+//    if(node->type == ST_ATOM) {
+//        printf("node is an atom: ");
+//        print_node_atom(node->value.atom);
+//    }
+//    else {
+//        printf("node is a what?\n");
+//    }
+//}
+//
+//
+//ast_node_opts *new_opts_node(enum opts_types type, void *v)
+//{
+//    ast_node_opts *node = (ast_node_opts *)malloc(sizeof(ast_node_opts));
+//    node->type = type;
+//
+//    switch(type) {
+//    case OP_WHERE:
+//        break;
+//    }
+//}
+//
+//void delete_opts_node(ast_node_opts *node)
+//{
+//    switch(node->type) {
+//    case OP_HAVING:
+//        break;
+//    case OP_GROUPBY:
+//        break;
+//    case OP_LIMIT:
+//        break;
+//    case OP_ORDERBY:
+//        break;
+//    case OP_WHERE:
+//        break;
+//    }
+//    free(node);
+//}
 
 
 // ----------------- added on ---------------------
@@ -356,7 +356,7 @@ struct _ExprVarCon *new_ExprVarCon_node()
     return root;
 }
 
-void add_ExprVar_node(struct _ExprVarCon *root, struct _ExprVar node)
+void add_ExprVar_node(struct _ExprVarCon *root, struct _ExprVar *node)
 {
     assert(root != NULL);
     struct _ExprVarCon *head = (struct _ExprVarCon *)malloc(sizeof(struct _ExprVarCon));
@@ -396,6 +396,16 @@ void del_DelSetceOpts_node(struct _DelSetceOpts *root)
 
     free(root);
 }
+
+
+struct _ExprVar *new_Expr_node()
+{
+    struct _ExprVar *root = malloc(sizeof(struct _ExprVar));
+
+    bzero(root, sizeof(struct _ExprVar));
+    return root;
+}
+
 
 #ifdef __cplusplus
 }

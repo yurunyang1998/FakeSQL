@@ -56,7 +56,7 @@ static struct _DataType newDataTypeNode()
     columns_list_t *colList_p;
     struct _TablList *tablList_p;
     
-    struct _ExprVar exprVar_t;
+    struct _ExprVar *exprVar_p;
     struct _ExprVarCon *exprVarCon_p;
 }
 
@@ -406,7 +406,7 @@ static struct _DataType newDataTypeNode()
 %type <uintval64> opt_length
 %type <intval> column_atts
 %type <tablList_p> table_references
-%type <exprVar_t> expr_var
+%type <exprVar_p> expr
 %type <exprVarCon_p> insert_vals insert_vals_list
 
 /* emmmm, 未使用的规则的类型声明... */
@@ -771,8 +771,8 @@ opt_col_names: /* nil */
 insert_vals_list: '(' insert_vals ')' { $$ = $2; }
     ;
 
-insert_vals: expr_var               { struct _ExprVarCon *root = new_ExprVarCon_node(); add_ExprVar_node(root, $1); $$ = root; }
-    | insert_vals ',' expr_var      { add_ExprVar_node($1, $3); $$ = $1; }
+insert_vals: expr               { struct _ExprVarCon *root = new_ExprVarCon_node(); add_ExprVar_node(root, $1); $$ = root; }
+    | insert_vals ',' expr      { add_ExprVar_node($1, $3); $$ = $1; }
     ;
 
 /* insert_stmt: INSERT insert_opts opt_into NAME SET insert_asgn_list opt_ondupupdate
@@ -857,57 +857,120 @@ insert_vals: expr_var               { struct _ExprVarCon *root = new_ExprVarCon_
     /* ; */
 
 /**** expressions ****/
-
-expr_var: NAME          { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_NAME; free($1); $$ = tmp; }
-    | USERVAR           { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_USERVAR; free($1); $$ = tmp; }
-    | STRING            { struct _ExprVar tmp; strncpy(tmp.data_, $1, strlen($1)); tmp.type_ = __Sql_STRING; free($1); $$ = tmp; }
+/* 终结符,填上合适的数据后直接返回.. */
+expr: NAME
+    {
+        struct _ExprVar *tmp = new_Expr_node();
+        strncpy(tmp->data_, $1, strlen($1));
+        tmp->type_ = __Sql_ExprNAME;
+        free($1);
+        $$ = tmp;
+    }
+    | USERVAR
+    {
+        struct _ExprVar *tmp = new_Expr_node();
+        strncpy(tmp->data_, $1, strlen($1));
+        tmp->type_ = __Sql_ExprUSERVAR;
+        free($1);
+        $$ = tmp;
+    }
+    | STRING
+    {
+        struct _ExprVar *tmp = new_Expr_node();
+        strncpy(tmp->data_, $1, strlen($1));
+        tmp->type_ = __Sql_ExprSTRING;
+        free($1);
+        $$ = tmp;
+    }
     | INTNUM
     {
-        struct _ExprVar tmp;
+        struct _ExprVar *tmp = new_Expr_node();
         char buf[16];
         bzero(buf, sizeof(buf));
         sprintf(buf, "%d", $1);
-        strncpy(tmp.data_, buf, strlen(buf);
-        tmp.type_ = __Sql_INTNUM;
+        strncpy(tmp->data_, buf, strlen(buf);
+        tmp->type_ = __Sql_ExprINTNUM;
         $$ = tmp;
     }
     | BOOL
     {
-        struct _ExprVar tmp;
+        struct _ExprVar *tmp = new_Expr_node();
         char buf[2];
         bzero(buf, sizeof(buf));
         sptrintf(buf, "%d", $1);
-        strncpy(tmp.data_, buf, strlen(buf));
-        tmp.type_ = __Sql_BOOL;
+        strncpy(tmp->data_, buf, strlen(buf));
+        tmp->type_ = __Sql_ExprBOOL;
         $$ = tmp;
     }
     ;
 
-/* expr: expr '+' expr             { emit("ADD"); }
- *     | expr '-' expr             { emit("SUB"); }
- *     | expr '*' expr             { emit("MUL"); }
- *     | expr '/' expr             { emit("DIV"); }
- *     | expr '%' expr             { emit("MOD"); }
- *     | expr MOD expr             { emit("MOD"); }
- *     | '-' expr %prec UMINUS     { emit("NEG"); }
- *     | expr ANDOP expr           { emit("AND"); }
- *     | expr OR expr              { emit("OR"); }
- *     | expr XOR expr             { emit("XOR"); }
- *     | expr COMPARISON expr      { emit("CMP %d", $2); }
- *     | expr COMPARISON '(' select_stmt ')'       { emit("CMPSELECT %d", $2); }
- *     | expr COMPARISON ANY '(' select_stmt ')'   { emit("CMPANYSELECT %d", $2); }
- *     | expr COMPARISON SOME '(' select_stmt ')'  { emit("CMPANYSELECT %d", $2); }
- *     | expr COMPARISON ALL '(' select_stmt ')'   { emit("CMPALLSELECT %d", $2); }
- *     | expr '|' expr         { emit("BITOR"); }
- *     | expr '&' expr         { emit("BITAND"); }
- *     | expr '^' expr         { emit("BITXOR"); }
- *     | expr SHIFT expr       { emit("SHIFT %s", $2 == 1 ? "left":"right"); }
- *     | NOT expr              { emit("NOT"); }
- *     | '!' expr              { emit("NOT"); }
- *     | USERVAR ASSIGN expr   { emit("ASSIGN @%s", $1); free($1); }
- *     ;
- *
- * expr: expr IS NULLX     { emit("ISNULL"); }
+expr: expr '+' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            tmp->ltree_ = $1;
+            tmp->rtree_ = $3;
+            tmp->type_ = __Sql_ExprADD;
+            $$ = tmp;
+        }
+    | expr '-' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            tmp->ltree_ = $1;
+            tmp->rtree_ = $3;
+            tmp->type_ = __Sql_ExprSUB;
+            $$ = tmp;
+        }
+    | expr '*' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            tmp->ltree_ = $1;
+            tmp->rtree_ = $3;
+            tmp->type_ = __Sql_ExprMUL;
+            $$ = tmp;
+        }
+    | expr '/' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            tmp->ltree_ = $1;
+            tmp->rtree_ = $3;
+            tmp->type_ = __Sql_ExprDIV;
+            $$ = tmp;
+        }
+    | expr '%' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            tmp->ltree_ = $1;
+            tmp->rtree_ = $3;
+            tmp->type_ = __Sql_ExprMOD;
+            $$ = tmp;
+        }
+    | expr MOD expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            tmp->ltree_ = $1;
+            tmp->rtree_ = $3;
+            tmp->type_ = __Sql_ExprMOD;
+            $$ = tmp;
+        }
+    | '-' expr %prec UMINUS     { emit("NEG"); }
+    | expr ANDOP expr           { emit("AND"); }
+    | expr OR expr              { emit("OR"); }
+    | expr XOR expr             { emit("XOR"); }
+    | expr COMPARISON expr      { emit("CMP %d", $2); }
+    | expr COMPARISON '(' select_stmt ')'       { emit("CMPSELECT %d", $2); }
+    | expr COMPARISON ANY '(' select_stmt ')'   { emit("CMPANYSELECT %d", $2); }
+    | expr COMPARISON SOME '(' select_stmt ')'  { emit("CMPANYSELECT %d", $2); }
+    | expr COMPARISON ALL '(' select_stmt ')'   { emit("CMPALLSELECT %d", $2); }
+    | expr '|' expr         { emit("BITOR"); }
+    | expr '&' expr         { emit("BITAND"); }
+    | expr '^' expr         { emit("BITXOR"); }
+    | expr SHIFT expr       { emit("SHIFT %s", $2 == 1 ? "left":"right"); }
+    | NOT expr              { emit("NOT"); }
+    | '!' expr              { emit("NOT"); }
+    | USERVAR ASSIGN expr   { emit("ASSIGN @%s", $1); free($1); }
+    ;
+
+/* expr: expr IS NULLX     { emit("ISNULL"); }
  *     | expr IS NOT NULLX { emit("ISNULL"); emit("NOT"); }
  *     | expr IS BOOL      { emit("ISBOOL %d", $3); }
  *     | expr IS NOT BOOL  { emit("ISBOOL %d", $4); emit("NOT"); }

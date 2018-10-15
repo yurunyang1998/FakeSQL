@@ -11,88 +11,88 @@ extern "C" {
 #include "commons.h"
 #include <strings.h>
 
-enum atom_types
-{
-    AT_NUMBER, AT_STRING, AT_IDENTIFIER, AT_CONDITION
-};
-
-struct _ast_node_opts;
-struct _ast_node_sexp;
-
-typedef struct _ast_node_sexp ast_node_sexp;
-
-typedef struct _ast_node_opts ast_node_opts;
+//enum atom_types
+//{
+//    AT_NUMBER, AT_STRING, AT_IDENTIFIER, AT_CONDITION
+//};
+//
+//struct _ast_node_opts;
+//struct _ast_node_sexp;
+//
+//typedef struct _ast_node_sexp ast_node_sexp;
+//
+//typedef struct _ast_node_opts ast_node_opts;
 
 // structure `ast_node_atom'
 // This should be the node corresponding to the terminator.Its type can be the `number',
 // `string'. `table reference' etc.
-typedef struct
-{
-    enum atom_types type;
-    union
-    {
-        long number;
-        char *string;
-        int subtok;
-    } value;
-    
-} ast_node_atom;
-
-// This function will generate a new item of the teminator
-// Return: the structure of `ast_node_atom' on success.
-ast_node_atom *
-new_atom_node(enum atom_types type, void *v);
-
-void
-delete_atom_node(ast_node_atom *node);
-
-void
-print_node_atom(ast_node_atom *node);
-
+//typedef struct
+//{
+//    enum atom_types type;
+//    union
+//    {
+//        long number;
+//        char *string;
+//        int subtok;
+//    } value;
+//
+//} ast_node_atom;
+//
+//// This function will generate a new item of the teminator
+//// Return: the structure of `ast_node_atom' on success.
+//ast_node_atom *
+//new_atom_node(enum atom_types type, void *v);
+//
+//void
+//delete_atom_node(ast_node_atom *node);
+//
+//void
+//print_node_atom(ast_node_atom *node);
+//
 // This function will add the parameter @v to the @node
-void
-add_atom_to_sexp(ast_node_sexp *_node, ast_node_atom *_atom);
-
-enum sexp_types
-{
-    ST_ATOM, ST_LIST, ST_NONE
-};
-
-struct _ast_node_sexp
-{
-    enum sexp_types type;
-    union
-    {
-        ast_node_atom *atom;
-    } value;
-    struct _ast_node_sexp *next;
-};
-
-void
-print_node_sexp(ast_node_sexp *node);
-
-ast_node_sexp *
-new_sexp_node(enum sexp_types type, void *v);
-
-void
-delete_sexp_node(ast_node_sexp *node);
-
-enum opts_types
-{
-    OP_WHERE, OP_SELECT, OP_GROUPBY, OP_HAVING, OP_ORDERBY, OP_LIMIT, OP_INTO_LIST
-};
-
-struct _ast_node_opts
-{
-    enum opts_types type;
-    union
-    {
-        ast_node_atom *atom;
-    } value;
-};
-
-ast_node_opts * new_opts_node(enum opts_types type, void *v);
-void delete_opts_node(ast_node_opts *node);
+//void
+//add_atom_to_sexp(ast_node_sexp *_node, ast_node_atom *_atom);
+//
+//enum sexp_types
+//{
+//    ST_ATOM, ST_LIST, ST_NONE
+//};
+//
+//struct _ast_node_sexp
+//{
+//    enum sexp_types type;
+//    union
+//    {
+//        ast_node_atom *atom;
+//    } value;
+//    struct _ast_node_sexp *next;
+//};
+//
+//void
+//print_node_sexp(ast_node_sexp *node);
+//
+//ast_node_sexp *
+//new_sexp_node(enum sexp_types type, void *v);
+//
+//void
+//delete_sexp_node(ast_node_sexp *node);
+//
+//enum opts_types
+//{
+//    OP_WHERE, OP_SELECT, OP_GROUPBY, OP_HAVING, OP_ORDERBY, OP_LIMIT, OP_INTO_LIST
+//};
+//
+//struct _ast_node_opts
+//{
+//    enum opts_types type;
+//    union
+//    {
+//        ast_node_atom *atom;
+//    } value;
+//};
+//
+//ast_node_opts * new_opts_node(enum opts_types type, void *v);
+//void delete_opts_node(ast_node_opts *node);
 
 // ---------- this following structure will be used as operator such as `SELECT', `CREATE', `INSERT' etc. -------
 
@@ -112,6 +112,7 @@ struct _SqlOpts;
 struct _DefOpts;
 struct _ExprVarCon;
 struct _DelSetceOpts;
+struct _Express;
 
 struct _OprtNode
 {
@@ -201,7 +202,7 @@ struct _DelSetceOpts {
     uint8_t optsDel_;       // 标志诸如`QUICK', `LOW PRIORITY' 等选项..
 
     // opt_where
-    struct _Expr;
+    struct _Express;
     // opt_limit
 };
 
@@ -248,20 +249,27 @@ void del_DelSetceOpts_node(struct _DelSetceOpts *root);
 struct _ExprVar {
     uint8_t type_;
     char data_[16];
+    // 这里必须建立标准的二叉树, 不能使用诡异的树了,23333.
+    // 二叉树的作用当然是作为求值使用.
+    struct _ExprVar *ltree_;        // expr ast-tree 的左子树
+    struct _ExprVar *rtree_;        // expr ast-tree 的右子树
 };
 
 // structure `_ExprVar' 's container..
 struct _ExprVarCon {
-    struct _ExprVar data_;
+    struct _ExprVar *data_;
     struct _ExprVarCon *next;
 };
 
 struct _ExprVarCon *new_ExprVarCon_node();
-void add_ExprVar_node(struct _ExprVarCon *root, struct _ExprVar node);
+void add_ExprVar_node(struct _ExprVarCon *root, struct _ExprVar *node);
 void del_ExprVarCon_node(struct _ExprVarCon *);
 
+struct _ExprVar *new_Expr_node();
+void del_ExprVar_node(struct _ExprVar *node);
+
 #ifdef __cplusplus
-}
+} // extern "C"
 #endif
 
 
