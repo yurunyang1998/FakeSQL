@@ -21,6 +21,8 @@ namespace  utils {
 
         ~InterfaceManager();
 
+        int insert_Into_Bson(const Quantum::HyfineStruct_t  &hy_p);
+
     };
 }
 #endif //THE_NEW_FAKE_SQL_INTERFACEMANAGER_H
