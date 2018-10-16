@@ -15,7 +15,10 @@ __Now compile it..__
 # git clone
 cd FakeSQL
 mkdir build && cd build
-cmake ..
+# For Debug
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+# For Release
+cmake .. 
 make -j2
 ```
 
