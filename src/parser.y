@@ -32,6 +32,12 @@ static struct _DataType newDataTypeNode()
     return data;
 }
 
+// 代码大量类似...不如直接写个宏
+#define setExprVar(node, ltree, rtree, type)    \
+    (node)->ltree_ = ltree;                     \
+    (node)->rtree_ = rtree;                     \
+    (node)->type_ = type
+
 %}
 %debug
 
@@ -405,10 +411,12 @@ static struct _DataType newDataTypeNode()
 %type <dataType_t> data_type
 %type <uintval64> opt_length
 %type <intval> column_atts
-%type <tablList_p> table_references
+%type <tablList_p> table_references table_reference table_factor
 %type <exprVar_p> expr
 %type <exprVarCon_p> insert_vals insert_vals_list
+%type <strval> opt_as_alias
 
+%type <intval> opt_for_join
 /* emmmm, 未使用的规则的类型声明... */
 %type <intval> opt_ondupupdate insert_asgn_list
 
@@ -606,11 +614,11 @@ column_list: NAME
 /*  */
 /* select_expr: expr opt_as_alias ; */
 
-table_references: table_reference           { $$ = 1; }
-    | table_references ',' table_reference  { $$ = $1 + 1; }
+table_references: table_reference           { $$ = $1; }
+    | table_references ',' table_reference  { $1->next = $3; $$ = $1; }
     ;
 
-table_reference: table_factor
+table_reference: table_factor               { $$ = $1; }
     ;
 
 table_factor: NAME opt_as_alias index_hint  { emit("TABLE %s", $1); free($1); }
@@ -623,8 +631,8 @@ table_factor: NAME opt_as_alias index_hint  { emit("TABLE %s", $1); free($1); }
     /* | [> nil <] */
     /* ; */
 
-opt_as_alias: AS NAME   { emit ("ALIAS %s", $2); free($2); }
-    | NAME              { emit ("ALIAS %s", $1); free($1); }
+opt_as_alias: AS NAME   { $$ = $1; free($2); }
+    | NAME              { $$ = $1; free($1); }
     | /* nil */
     ;
 
@@ -666,22 +674,22 @@ opt_as_alias: AS NAME   { emit ("ALIAS %s", $2); free($2); }
     /* | USING '(' column_list ')' { emit("USING %d", $3); } */
     /* ; */
 
-/* index_hint: USE KEY opt_for_join '(' index_list ')'
- *                   { emit("INDEXHINT %d %d", $5, 010+$3); }
- *     | IGNORE KEY opt_for_join '(' index_list ')'
- *                   { emit("INDEXHINT %d %d", $5, 020+$3); }
- *     | FORCE KEY opt_for_join '(' index_list ')'
- *                   { emit("INDEXHINT %d %d", $5, 030+$3); }
- *     | [> nil <]
- *     ; */
+index_hint: USE KEY opt_for_join '(' index_list ')'
+                  { emit("INDEXHINT %d %d", $5, 010+$3); }
+    | IGNORE KEY opt_for_join '(' index_list ')'
+                  { emit("INDEXHINT %d %d", $5, 020+$3); }
+    | FORCE KEY opt_for_join '(' index_list ')'
+                  { emit("INDEXHINT %d %d", $5, 030+$3); }
+    | /* nil */
+    ;
 
-/* opt_for_join: FOR JOIN { $$ = 1; } */
-    /* | [> nil <]        { $$ = 0; } */
-    /* ; */
+opt_for_join: FOR JOIN { $$ = 1; }
+    | /* nil */        { $$ = 0; }
+    ;
 
-/* index_list: NAME  { emit("INDEX %s", $1); free($1); $$ = 1; }
- *     | index_list ',' NAME { emit("INDEX %s", $3); free($3); $$ = $1 + 1; }
- *     ; */
+index_list: NAME  { emit("INDEX %s", $1); free($1); $$ = 1; }
+    | index_list ',' NAME { emit("INDEX %s", $3); free($3); $$ = $1 + 1; }
+    ;
 
 /* table_subquery: '(' select_stmt ')' { emit("SUBQUERY"); } */
     /* ; */
@@ -907,67 +915,109 @@ expr: NAME
 expr: expr '+' expr
         {
             struct _ExprVar *tmp = new_Expr_node();
-            tmp->ltree_ = $1;
-            tmp->rtree_ = $3;
-            tmp->type_ = __Sql_ExprADD;
+            setExprVar(tmp, $1, $3, __Sql_ExprADD);
             $$ = tmp;
         }
     | expr '-' expr
         {
             struct _ExprVar *tmp = new_Expr_node();
-            tmp->ltree_ = $1;
-            tmp->rtree_ = $3;
-            tmp->type_ = __Sql_ExprSUB;
+            setExprVar(tmp, $1, $3, __Sql_ExprSUB);
             $$ = tmp;
         }
     | expr '*' expr
         {
             struct _ExprVar *tmp = new_Expr_node();
-            tmp->ltree_ = $1;
-            tmp->rtree_ = $3;
-            tmp->type_ = __Sql_ExprMUL;
+            setExprVar(tmp, $1, $3, __Sql_ExprMUL);
             $$ = tmp;
         }
     | expr '/' expr
         {
             struct _ExprVar *tmp = new_Expr_node();
-            tmp->ltree_ = $1;
-            tmp->rtree_ = $3;
-            tmp->type_ = __Sql_ExprDIV;
+            setExprVar(tmp, $1, $3, __Sql_ExprDIV);
             $$ = tmp;
         }
     | expr '%' expr
         {
             struct _ExprVar *tmp = new_Expr_node();
-            tmp->ltree_ = $1;
-            tmp->rtree_ = $3;
-            tmp->type_ = __Sql_ExprMOD;
+            setExprVar(tmp, $1, $3, __Sql_ExprMOD);
             $$ = tmp;
         }
     | expr MOD expr
         {
             struct _ExprVar *tmp = new_Expr_node();
-            tmp->ltree_ = $1;
-            tmp->rtree_ = $3;
-            tmp->type_ = __Sql_ExprMOD;
+            setExprVar(tmp, $1, $3, __Sql_ExprMOD);
             $$ = tmp;
         }
-    | '-' expr %prec UMINUS     { emit("NEG"); }
-    | expr ANDOP expr           { emit("AND"); }
-    | expr OR expr              { emit("OR"); }
-    | expr XOR expr             { emit("XOR"); }
-    | expr COMPARISON expr      { emit("CMP %d", $2); }
-    | expr COMPARISON '(' select_stmt ')'       { emit("CMPSELECT %d", $2); }
-    | expr COMPARISON ANY '(' select_stmt ')'   { emit("CMPANYSELECT %d", $2); }
-    | expr COMPARISON SOME '(' select_stmt ')'  { emit("CMPANYSELECT %d", $2); }
-    | expr COMPARISON ALL '(' select_stmt ')'   { emit("CMPALLSELECT %d", $2); }
-    | expr '|' expr         { emit("BITOR"); }
-    | expr '&' expr         { emit("BITAND"); }
-    | expr '^' expr         { emit("BITXOR"); }
-    | expr SHIFT expr       { emit("SHIFT %s", $2 == 1 ? "left":"right"); }
-    | NOT expr              { emit("NOT"); }
-    | '!' expr              { emit("NOT"); }
-    | USERVAR ASSIGN expr   { emit("ASSIGN @%s", $1); free($1); }
+    | '-' expr %prec UMINUS
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $2, NULL, __Sql_ExprNEG);
+            $$ = tmp;
+        }
+    | expr ANDOP expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, $3, __Sql_ExprANDOP);
+            $$ = tmp;
+        }
+    | expr OR expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, $3, __Sql_ExprOR);
+            $$ = tmp;
+        }
+    | expr XOR expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, $3, __Sql_ExprXOR);
+            $$ = tmp;
+        }
+    | expr COMPARISON expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, $3, $2);
+            $$ = tmp;
+        }
+    | expr '|' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, $3, __Sql_ExprBITOR);
+            $$ = tmp;
+        }
+    | expr '&' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, $3, __Sql_ExprBITAND);
+            $$ = tmp;
+        }
+    | expr '^' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, $3, __Sql_ExprBITXOR);
+            $$ = tmp;
+        }
+    | NOT expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, NULL, __Sql_ExprNOT);
+            $$ = tmp;
+        }
+    | '!' expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            setExprVar(tmp, $1, NULL, __Sql_ExprNOT);
+            $$ = tmp;
+        }
+    | USERVAR ASSIGN expr
+        {
+            struct _ExprVar *tmp = new_Expr_node();
+            tmp->type_ = __Sql_ExprUSERVAR;
+            tmp->ltree_ = $3;
+            tmp->rtree_ = NULL;
+            strncpy(tmp->data_, $1, strlen($1));
+            free($1);
+            $$ = tmp;
+        }
     ;
 
 /* expr: expr IS NULLX     { emit("ISNULL"); }
