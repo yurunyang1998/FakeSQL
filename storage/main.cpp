@@ -41,19 +41,19 @@ using namespace utils;
 
 int main() {
 
-    basic_read_write    bs("./test.txt");
-
-    bson_::bson_couple b;
-
-    b.insert_UTF8_value("111", "222");
-    b.insert_int32_value("1111", 683);
-    uint8_t  *buf;
-    buf = b.getBsonBuf();
-    //b.rebuildFromBuffer(buf);
-    bs.write_bsonCouple(&b,b.getBsonBuf());
-    std::shared_ptr<uint8_t > bufPtr;
-    bufPtr = bs.read_bsonCouple(1008);
-    b.rebuildFromBuffer(bufPtr.get());
+//    basic_read_write    bs("./test.txt");
+//
+//    bson_::bson_couple b;
+//
+//    b.insert_UTF8_value("111", "222");
+//    b.insert_int32_value("1111", 683);
+//    uint8_t  *buf;
+//    buf = b.getBsonBuf();
+//    //b.rebuildFromBuffer(buf);
+//    bs.write_bsonCouple(b.getBsonBuf());
+//    std::shared_ptr<uint8_t > bufPtr;
+//    bufPtr = bs.read_bsonCouple(1008);
+//    b.rebuildFromBuffer(bufPtr.get());
 
 
 
@@ -92,7 +92,7 @@ int main() {
 //        fprintf (stdout, "%s\n", str);
 //        bson_free (str);
 //    }
-}
+
 ////    bson_t b=BSON_INITIALIZER;
 ////    //char a[] ="ad";
 ////    bson_append_utf8 (&b, "key", -1,"123", -1);
@@ -117,24 +117,24 @@ int main() {
 ////    }
 //
 //
+
+    Manager<int, int> manager(-2147483648);
+    for (int i = 0; i < 100000; i++) {
+        if (i % 1000 == 0)
+            cout << i << endl;
+        manager.insert_data(i, i);
+    }
+
+
 //
-////    Manager<int, int> manager(-2147483648);
-////
-////    for(int i=0;i<100000;i++) {
-////        if (i % 1000 == 0)
-////            cout << i << endl;
-////        manager.insert_data(i, i);
-////    }
-////
-//
-////
-////    for (int i=0;i<50;i++)
-////        manager.data_search(i);
-////    basic_read_write testfile("../test.tfrecord");
-////    int a;
-////    testfile.insert_value("jtsghrz");
-//
-//
+    for (int i = 0; i < 50; i++)
+        manager.data_search(i);
+}
+//    basic_read_write testfile("../test.tfrecord");
+//    int a;
+//    testfile.insert_value("jtsghrz");
+
+
 //
 //
 //

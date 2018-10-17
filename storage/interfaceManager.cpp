@@ -24,31 +24,73 @@ int utils::InterfaceManager::insert_Into_Bson(const Quantum::HyfineStruct_t &hy_
 
     enum _DeclType {
         DE_INT=0, DE_SMALLINT, DE_INTEGER, DE_TINYINT, DE_CHAR, DE_VARCHAR, DE_DATE, DE_DECIMAL, DE_NUMERIC
-    }opy;
-    int k;
-    opy = (enum _DeclType)k;
+    }dataType_;
 
-    for(int i =0;i<attrNums;i++)
+    enum OprtType
     {
-        opy = (enum _DeclType)hy_p.colListRef_[i].colType_.type_;
+        TS_CREATE=0, TS_INSERT, TS_SELECT, TS_DELETE
+    }oprtType_;
 
-        switch (opy)
-        {
-            case DE_CHAR: {
-                bsonCouple->insert_UTF8_value(hy_p.colListRef_[i].colRef_,
-                                              hy_p.colListRef_[i].colVal_);
-                break;
+
+    int k;
+    //opy = (enum _DeclType)k;
+
+    oprtType_ = (enum OprtType)k;
+    switch (oprtType_)
+    {
+
+        case TS_INSERT:{
+
+            for(int i =0;i<attrNums;i++)
+            {
+                dataType_ = (enum _DeclType)hy_p.colListRef_[i].colType_.type_;
+
+                switch (dataType_)
+                {
+                    case DE_CHAR: {
+                        bsonCouple->insert_UTF8_value(hy_p.colListRef_[i].colRef_,
+                                                      hy_p.colListRef_[i].colVal_);
+                        break;
+                    }
+                    case DE_INT: {
+                        bsonCouple->insert_int32_value(hy_p.colListRef_[i].colRef_,
+                                                       hy_p.colListRef_[i].colValINT_);
+                    };
+                }
             }
-            case DE_INT: {
-                bsonCouple->insert_int32_value(hy_p.colListRef_[i].colRef_,
-                                               hy_p.colListRef_[i].colValINT_);
-            };
+
+            uint8_t *bsonBuf_ = bsonCouple->getBsonBuf();
+            off64_t keyIntoTree =  this->BasicReadWrite->write_bsonCouple(bsonBuf_);
+            //BTreeManager->initial_B_tree()
         }
+
+        case TS_CREATE:{
+
+        }
+
+        case TS_SELECT:{
+
+        }
+
+        case TS_DELETE:{
+
+        }
+
+
     }
 
-    uint8_t *bsonBuf_ = bsonCouple->getBsonBuf();
-    off64_t keyIntoTree =  this->BasicReadWrite->write_bsonCouple(bsonBuf_);
-    this->BTreeManager->insert_data()
+
+
+
+
+
+
+
+
+
+
+
+
 
     return 0;
 }
