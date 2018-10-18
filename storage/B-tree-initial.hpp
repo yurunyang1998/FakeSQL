@@ -62,9 +62,9 @@ namespace  utils {
             //root->insert(key+100,child_2);
 
 
-            root->insert(2147483647,child_2);
-            child_2->insert(2147483647,leaf_node2);
-            leaf_node1->insert(key,key);
+            root->insert(to_string(2147483647),child_2);
+            child_2->insert(to_string(2147483647),leaf_node2);
+            leaf_node1->insert(key,0);
 
             whether_initialed =1;
             maxdeepth =3;

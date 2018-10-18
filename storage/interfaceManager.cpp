@@ -3,7 +3,7 @@
 //
 
 #include "interfaceManager.h"
-
+#include "pub_friends.hpp"
 utils::InterfaceManager::~InterfaceManager() {
     delete BTreeManager;
     delete BasicReadWrite;
@@ -12,7 +12,7 @@ utils::InterfaceManager::~InterfaceManager() {
 
 utils::InterfaceManager::InterfaceManager(char *dbfilenamepath, string initialkey)
         :filepath(dbfilenamepath),initialKey(initialkey) {
-        BTreeManager = new Manager<string,off64_t>(initialKey);
+        BTreeManager = new Manager<int,off64_t >(3234);
         BasicReadWrite = new basic_read_write(filepath);
 
 }

@@ -5,8 +5,7 @@
 #ifndef B_TREE_NODES_HPP
 #define B_TREE_NODES_HPP
 
-#include <deque>
-#include <algorithm>
+ #include <algorithm>
 #include "iostream"
 #include "string"
 #include "B-tree-initial.hpp"
@@ -82,7 +81,7 @@ namespace utils {
 
 
         key_value_pair_for_middle_node_which_next_node_is_leaf_node
-                (key_type key = NULL, leaf_node<key_type,int> * value = NULL):
+                (key_type key = NULL, leaf_node<key_type,value_type> * value = NULL):
                 key(key),value(value)
         {
             //update_key();
@@ -91,7 +90,7 @@ namespace utils {
 
 
         key_type getkey(void) { return key ; }
-        leaf_node<key_type,int> * getvalue(void) { return  value; }
+        leaf_node<key_type,value_type > * getvalue(void) { return  value; }
         void set_key(key_type  set_key)
         {
             key = set_key;
@@ -176,8 +175,8 @@ namespace utils {
 
                 } else
                 {
-                    this->Maxkey= -2147483648;
-                    return -2147483648;
+                    this->Maxkey= to_string(-2147483648);
+                    return to_string(-2147483648);
                 }
 
             } else {
@@ -208,7 +207,7 @@ namespace utils {
                 } else
                 {
                     //cout <<"else"<<endl;
-                    return -2147483648;
+                    return to_string(-2147483648);
                 }
 
             }
