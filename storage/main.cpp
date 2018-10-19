@@ -7,29 +7,40 @@
 #include "memory"
 #include "B-tree-initial.hpp"
 #include "file_read_write_system.h"
+#include "B_tree_initial_without_templete.h"
 #include <random>
 //#include <bson.h>
 //#include <bson-types.h>
 //#include "bson_.h"
-using namespace utils;
+using namespace std;
 
 
 
 int main() {
 
-    string a = "abcd";
-    string b = "ab";
-    if (a > b) cout << 1 << endl;
-    else cout << 0 << endl;
-//    return 0;
-//    cout<<"a:"<<(a<b)<<endl;
+    string a = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
+//    string b = "ab";
+//    if (a > b) cout << 1 << endl;
+//    else cout << 0 << endl;
+////    return 0;
+////    cout<<"a:"<<(a<b)<<endl;
 
-    Manager<string, off64_t> manager("dasf");
-    for (int i = 0; i < 100000; i++) {
-        if (i % 1000 == 0)
-            cout << i << endl;
-        manager.insert_data(to_string(i), i);
+    utils::Manager manager("1");
+    for (int i = 0; i < a.length(); i++) {
+
+        string p(1,a[i]);
+        cout<<p<<i<<endl;
+        manager.insert_data(p,i);
     }
+
+    for (int i = 0; i < a.length(); i++) {
+        if(i%1000==0)
+            cout<<i<<endl;
+        string p(1,a[i]);
+        manager.data_search(p);
+    }
+
+    int c;
 }
 
 

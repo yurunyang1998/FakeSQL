@@ -5,16 +5,18 @@
 #ifndef THE_NEW_FAKE_SQL_INTERFACEMANAGER_H
 #define THE_NEW_FAKE_SQL_INTERFACEMANAGER_H
 
-#include "B-tree-initial.hpp"
+#include "B_tree_nodes_without_templete.h"
+#include "B_tree_initial_without_templete.h"
 #include "bson_.h"
 #include "pub_friends.hpp"
 #include "file_read_write_system.h"
+using namespace std;
 namespace  utils {
     class InterfaceManager {
     private:
         char * filepath;
         string initialKey;
-        Manager<int , off64_t > *BTreeManager;// = new Manager<string, off64_t>("-2147483648");
+        Manager *BTreeManager;// = new Manager<string, off64_t>("-2147483648");
         basic_read_write *BasicReadWrite ;//= new basic_read_write(".//test.db");
 
     public:

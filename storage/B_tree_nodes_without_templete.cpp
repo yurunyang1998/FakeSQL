@@ -5,7 +5,7 @@
 #include <iostream>
 #include <algorithm>
 #include "B_tree_nodes_without_templete.h"
-
+#include "B_tree_initial_without_templete.h"
 
 
 using namespace utils;
@@ -43,9 +43,14 @@ namespace  utils{
 
     }
 
+    void key_value_pair_for_middle_node_which_next_node_is_leaf_node::update_key() {
 
-    middle_node::middle_node(middle_node *_parent_node)
-            : parent_node(parent_node) {}
+            key= value->get_key();
+
+    }
+
+//    middle_node::middle_node(middle_node *_parent_node)
+//            : parent_node(parent_node) {};
 
     void middle_node::set_manager(Manager *manager) {
         this->manager = manager;
@@ -122,7 +127,7 @@ namespace  utils{
     }
 
 
-    string middle_node::get_key(int front_or_back=0) {
+    string middle_node::get_key(int front_or_back) {
         if(flag==1)
         {
             if(front_or_back==0)
@@ -183,14 +188,14 @@ namespace  utils{
     }
 
 
-    points_struct * middle_node::search(string key) {
+    points_struct * middle_node::searchkey(string key) {
 
         points_struct * points_struct_t = new points_struct;
 
         if(flag ==0)
         {
 
-            typename deque< key_value_pair_for_middle_node > ::iterator item
+            deque< key_value_pair_for_middle_node > ::iterator item
                     =key_value_pair_for_middle_node_t.begin();
 
             while(item != key_value_pair_for_middle_node_t.end())
@@ -259,7 +264,7 @@ namespace  utils{
         if(used_pairs>=10)
         {
             middle_node * new_middle_node = new middle_node;
-            new_middle_node =  _split_middle_node(this);//,value);
+            new_middle_node =  _split_middle_node(this);
 
             string new_middle_node_maxkey = new_middle_node->get_key(1);
             //cout<<size<<":size"<<endl;
@@ -333,27 +338,25 @@ namespace  utils{
                       key_value_pair_for_middle_node_which_next_node_is_leaf_node_t.end());
     }
 
-    friend bool operator< ( key_value_pair_for_middle_node &s1, key_value_pair_for_middle_node &s2);
 
-    friend bool operator< (key_value_pair_for_middle_node_which_next_node_is_leaf_node&s1,
-                           key_value_pair_for_middle_node_which_next_node_is_leaf_node &s2);
+
 
     /////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////
     ///////下面是叶子节点类
 
 
-    leaf_node::leaf_node(middle_node * parent_node= nullptr,
-                         leaf_node * brother_node = nullptr):parent_node(parent_node),brother_node(brother_node)
+    leaf_node::leaf_node(middle_node * parent_node,
+                         leaf_node * brother_node):parent_node(parent_node),brother_node(brother_node)
     {
         used_pairs=0;
-        Max_key =0;
+        Max_key = "0";
         this->parent_node = parent_node;
         this->brother_node = brother_node;
     };
 
 
-    string leaf_node::pop_key(int flag=0)
+    string leaf_node::pop_key(int flag)
     {
         if(flag==0) {
          deque<key_value_pair>::iterator item = key_value_pairs.begin();
@@ -407,7 +410,7 @@ namespace  utils{
 
     int leaf_node::delete_pair(string key) {
 
-        if(key == 0)
+        if(key == "0")
         {
             key_value_pairs.pop_front();
             used_pairs--;
@@ -451,6 +454,10 @@ namespace  utils{
         return 0;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////下面是公用的友元函数//////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
     void  _split_leaf_node(middle_node* parent_node,leaf_node * leaf_node1)
@@ -487,7 +494,7 @@ namespace  utils{
     }
 
 
-    middle_node *  _split_middle_node(middle_node * middle_node1) // ,middle_node  * middle_node_need_to_be_inserted)
+    middle_node *  _split_middle_node(middle_node * middle_node1)
     {
 
         middle_node * new_middle_node = new middle_node;
@@ -508,20 +515,20 @@ namespace  utils{
 
 
 
-    template <typename key_type,typename value_type>   //叶节点内的sort函数
+    //template <typename key_type,typename value_type>   //叶节点内的sort函数
     bool operator< (key_value_pair  &s1 ,  key_value_pair  &s2)
     {
         return s1.key<s2.key;
     }
 
 
-    template <typename key_type,typename value_type>                        //中间节点内的用于sort的友元函数
+    //template <typename key_type,typename value_type>                        //中间节点内的用于sort的友元函数
     bool operator< ( key_value_pair_for_middle_node  &s1, key_value_pair_for_middle_node  &s2)
     {
         return s1.key<s2.key;
     }
 
-    template <typename key_type,typename value_type>                     //下一个节点是叶子节点的中间节点的用于sort的友元函数
+    //template <typename key_type,typename value_type>                     //下一个节点是叶子节点的中间节点的用于sort的友元函数
     bool operator< (key_value_pair_for_middle_node_which_next_node_is_leaf_node  &s1,
                     key_value_pair_for_middle_node_which_next_node_is_leaf_node  &s2)
     {

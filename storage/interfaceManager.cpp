@@ -12,7 +12,7 @@ utils::InterfaceManager::~InterfaceManager() {
 
 utils::InterfaceManager::InterfaceManager(char *dbfilenamepath, string initialkey)
         :filepath(dbfilenamepath),initialKey(initialkey) {
-        BTreeManager = new Manager<int,off64_t >(3234);
+        BTreeManager = new Manager("zzzzz");
         BasicReadWrite = new basic_read_write(filepath);
 
 }
@@ -40,6 +40,7 @@ int utils::InterfaceManager::insert_Into_Bson(const Quantum::HyfineStruct_t &hy_
     {
 
         case TS_INSERT:{
+            string primaryKey;
 
             for(int i =0;i<attrNums;i++)
             {
@@ -48,11 +49,16 @@ int utils::InterfaceManager::insert_Into_Bson(const Quantum::HyfineStruct_t &hy_
                 switch (dataType_)
                 {
                     case DE_CHAR: {
+                        if(hy_p.colListRef_[i].colAttr_.isPrimary_)
+                            primaryKey = hy_p.colListRef_[i].colVal_;
                         bsonCouple->insert_UTF8_value(hy_p.colListRef_[i].colRef_,
                                                       hy_p.colListRef_[i].colVal_);
                         break;
                     }
                     case DE_INT: {
+
+                        if(hy_p.colListRef_[i].colAttr_.isPrimary_)
+                            primaryKey = hy_p.colListRef_[i].colVal_;
                         bsonCouple->insert_int32_value(hy_p.colListRef_[i].colRef_,
                                                        hy_p.colListRef_[i].colValINT_);
                     };
@@ -61,7 +67,8 @@ int utils::InterfaceManager::insert_Into_Bson(const Quantum::HyfineStruct_t &hy_
 
             uint8_t *bsonBuf_ = bsonCouple->getBsonBuf();
             off64_t keyIntoTree =  this->BasicReadWrite->write_bsonCouple(bsonBuf_);
-            //BTreeManager->initial_B_tree()
+            BTreeManager->initial_B_tree("");
+            BTreeManager->insert_data(primaryKey,keyIntoTree);
         }
 
         case TS_CREATE:{

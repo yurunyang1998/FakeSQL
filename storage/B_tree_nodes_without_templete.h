@@ -24,13 +24,16 @@ namespace utils {
 
         string getkey(void){ return key;};
 
-        middle_node * getvalue(void){ return  value};
+        middle_node * getvalue(void){ return  value;}
 
         void set_key(string set_key);
 
         void set_value(middle_node *set_value);
 
         off64_t update_key();
+
+        friend bool operator< ( key_value_pair_for_middle_node &s1, key_value_pair_for_middle_node &s2);
+
 
     };
 
@@ -64,13 +67,10 @@ namespace utils {
             value = set_value;
         }
 
-        void update_key()
-        {
-            key= value->get_key();
-        }
+        void update_key();
 
-
-
+        friend bool operator< (key_value_pair_for_middle_node_which_next_node_is_leaf_node&s1,
+                               key_value_pair_for_middle_node_which_next_node_is_leaf_node &s2);
 
 
     };
@@ -78,7 +78,7 @@ namespace utils {
     class  middle_node{
     private:
         middle_node * parent_node;
-        utils::Manager *manger = nullptr;
+        utils::Manager * manager = nullptr;
         int flag = -1;
         int used_pairs = 0;
         string Maxkey;
@@ -109,7 +109,7 @@ namespace utils {
             return  used_pairs;
         }
 
-        points_struct * search(string key);
+        points_struct * searchkey(string key);
 
         middle_node * getParent_node();
 
@@ -175,22 +175,23 @@ namespace utils {
         };
 
 
-        int delete_pair(string key=0);
+        int delete_pair(string  key="0");
 
         string get_key();
 
         void _sort();
 
         off64_t searchkey(string key);
+
+        friend bool operator< (key_value_pair &s1 ,  key_value_pair &s2);
+
     };
 
-    friend bool operator< (key_value_pair &s1 ,  key_value_pair &s2);
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////下面是公用的友元函数//////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 }

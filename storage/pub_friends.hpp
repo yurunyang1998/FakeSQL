@@ -43,6 +43,7 @@ namespace utils {
 
     //template <class key_type, class value_type>
     middle_node * _split_middle_node(middle_node * middle_node1,leaf_node * leaf_node1);
+    middle_node *  _split_middle_node(middle_node * middle_node1);
 
 }
 
